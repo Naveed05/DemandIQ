@@ -9,7 +9,7 @@ import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
-from dem andiq.features import make_features
+from demandiq.features import make_features
 
 FEATURE_COLUMNS = [
     "day_of_week", "day_of_month", "month", "is_weekend",
@@ -27,19 +27,20 @@ class EvaluationResult:
 
 
 def _score(actual: pd.Series, predicted: np.ndarray) -> dict[str, float]:
+    actual_values = actual.to_numpy(dtype=float)
+    errors = actual_values - np.asarray(predicted, dtype=float)
     return {
-        "mae": float(mean_absolute_error(actual, predicted)),
-        "rmse": float(np.sqrt(mean_squared_error(actual, predicted))),
-        "wape": float(np.abs(actual.to_numpy() - predicted).sum() / max(actual.sum(), 1.0)),
+        "mae": float(mean_absolute_error(actual_values, predicted)),
+        "rmse": float(np.sqrt(mean_squared_error(actual_values, predicted))),
+        "wape": float(np.abs(errors).sum() / max(float(np.abs(actual_values).sum()), 1.0)),
     }
 
 
 def evaluate_forecast(frame: pd.DataFrame, validation_days: int = 28) -> EvaluationResult:
     """Fit on earlier dates and evaluate on the final N unique dates.
 
-    This is a one-step-ahead holdout evaluation. Lag features in the validation
-    rows use observed sales from prior dates, which is appropriate for rolling
-    daily forecasting where the previous day's sales are available.
+    This is a rolling one-step-ahead holdout: prior observed validation sales
+    are available to construct lag features for later validation dates.
     """
     if validation_days < 1:
         raise ValueError("validation_days must be at least 1")
@@ -63,8 +64,9 @@ def evaluate_forecast(frame: pd.DataFrame, validation_days: int = 28) -> Evaluat
     result["prediction"] = predicted
     result["baseline_prediction"] = valid["lag_7"].fillna(valid["lag_1"]).to_numpy()
     metrics = _score(valid["sales"], predicted)
-    metrics.update({f"baseline_{key}": value for key, value in _score(
-        valid["sales"], result["baseline_prediction"].to_numpy()
-    ).items()})
+    metrics.update({
+        f"baseline_{key}": value
+        for key, value in _score(valid["sales"], result["baseline_prediction"].to_numpy()).items()
+    })
     metrics["validation_days"] = float(validation_days)
     return EvaluationResult(result.reset_index(drop=True), metrics, model)
