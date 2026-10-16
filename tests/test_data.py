@@ -9,7 +9,7 @@ def sample_frame():
         "date": ["2025-01-02", "2025-01-01"],
         "store_id": ["S1", "S1"],
         "product_id": ["P1", "P1"],
-        "sales": [3, 2],
+        "sales": [3.0, 2.0],
     })
 
 
