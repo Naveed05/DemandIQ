@@ -68,8 +68,25 @@ def evaluate_forecast(frame: pd.DataFrame, validation_days: int = 28) -> Evaluat
     predicted = np.maximum(model.predict(valid[FEATURE_COLUMNS]), 0.0)
     result = valid[["date", "store_id", "product_id", "sales"]].copy()
     result["prediction"] = predicted
-    result["baseline_prediction"] = valid["lag_7"].fillna(valid["lag_1"]).to_numpy()
+    # Keep baseline_prediction as the existing weekly-seasonal baseline column
+    # for dashboard compatibility; expose both simple baselines for benchmarking.
+    result["naive_prediction"] = valid["lag_1"].to_numpy()
+    result["seasonal_naive_prediction"] = valid["lag_7"].to_numpy()
+    result["baseline_prediction"] = result["seasonal_naive_prediction"]
     metrics = _score(valid["sales"], predicted)
+    metrics.update({
+        f"naive_{key}": value
+        for key, value in _score(
+            valid["sales"], result["naive_prediction"].to_numpy()
+        ).items()
+    })
+    metrics.update({
+        f"seasonal_naive_{key}": value
+        for key, value in _score(
+            valid["sales"], result["seasonal_naive_prediction"].to_numpy()
+        ).items()
+    })
+    # Preserve the original baseline metric names used by the current dashboard.
     metrics.update({
         f"baseline_{key}": value
         for key, value in _score(
