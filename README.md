@@ -49,6 +49,23 @@ In the dashboard sidebar, upload a CSV with these required columns:
 
 Each store/product series must have one row for every calendar day in its history. If a product was not sold on a day, include a zero-sales row when that is the correct interpretation; do not silently treat missing records as zero. Duplicate store/product/day rows are rejected. At least 29 days of history are needed to construct lag features, and more history is generally preferable.
 
+## Running a forecasting benchmark
+
+The benchmark command evaluates a prepared daily-sales CSV on the same chronological holdout for three methods: the Random Forest model, a last-observed-day naive forecast, and a seasonal-naive forecast using sales from seven days earlier.
+
+```bash
+python scripts/benchmark.py --input path/to/daily_sales.csv --validation-days 28
+```
+
+By default, reports are written to `reports/benchmark/`:
+- `metrics.json` — dataset summary, evaluation method, and overall MAE/RMSE/WAPE for each method
+- `predictions.csv` — actual sales and each method's predictions for each validation row
+- `per_series_metrics.csv` — metrics split by store and product
+
+The input must be a prepared daily dataset with `date`, `store_id`, `product_id`, and non-negative `sales` columns. Each store/product series must contain every calendar day, including explicit zero-sales rows when appropriate; duplicate store/product/day records are rejected. The tool does not download or silently transform a raw transaction dataset for you. Document the source and licence of any external dataset you use, and record any aggregation/cleaning steps separately.
+
+The evaluation is rolling one-step-ahead: actual observations from earlier dates in the validation window are available as lag inputs for later validation dates. This is not the same as evaluating a fully recursive multi-day forecast. Do not claim that the model is better unless the measured results support that conclusion.
+
 ## Project layout
 - `src/demandiq/` — reusable data, feature, forecasting, and inventory logic
 - `scripts/` — reproducible demo-data generation
