@@ -5,7 +5,7 @@ DemandIQ is an end-to-end retail analytics project for forecasting product deman
 > **Status:** Early development. Metrics and capabilities will be documented only after implementation and evaluation. Demo data is synthetic and must not be presented as real-world business evidence.
 
 ## Product goals
-- Generate or ingest daily product/store sales data.
+- Generate synthetic demo sales or upload a daily sales CSV with `date`, `store_id`, `product_id`, and `sales` columns.
 - Build time-aware features without using future information.
 - Compare a simple baseline with a machine-learning forecasting model.
 - Convert forecasts into interpretable reorder recommendations.
@@ -36,6 +36,18 @@ streamlit run app.py
 ```
 
 Run tests with `pytest`.
+
+## Uploading your own data
+In the dashboard sidebar, upload a CSV with these required columns:
+
+| Column | Meaning |
+| --- | --- |
+| `date` | Calendar date for the observation |
+| `store_id` | Store or location identifier |
+| `product_id` | Product/SKU identifier |
+| `sales` | Non-negative daily units sold |
+
+Each store/product series must have one row for every calendar day in its history. If a product was not sold on a day, include a zero-sales row when that is the correct interpretation; do not silently treat missing records as zero. Duplicate store/product/day rows are rejected. At least 29 days of history are needed to construct lag features, and more history is generally preferable.
 
 ## Project layout
 - `src/demandiq/` — reusable data, feature, forecasting, and inventory logic
