@@ -60,7 +60,7 @@ def build_benchmark_report(
         row: dict[str, object] = {
             "store_id": str(store_id),
             "product_id": str(product_id),
-            "validation_rows": int(len(group)),
+            "validation_rows": len(group),
         }
         for name, column in (
             ("random_forest", "prediction"),
@@ -72,14 +72,14 @@ def build_benchmark_report(
         per_series_rows.append(row)
 
     report: dict[str, object] = {
-        "dataset_rows": int(len(clean)),
-        "store_count": int(clean["store_id"].nunique()),
-        "product_count": int(clean["product_id"].nunique()),
+        "dataset_rows": len(clean),
+        "store_count": clean["store_id"].nunique(),
+        "product_count": clean["product_id"].nunique(),
         "series_count": int(clean[["store_id", "product_id"]].drop_duplicates().shape[0]),
         "date_start": clean["date"].min().date().isoformat(),
         "date_end": clean["date"].max().date().isoformat(),
         "validation_days_requested": validation_days,
-        "validation_rows": int(len(predictions)),
+        "validation_rows": len(predictions),
         "evaluation_method": (
             "Chronological rolling one-step-ahead holdout; observed sales from "
             "earlier validation dates are used as lag inputs for later dates."
