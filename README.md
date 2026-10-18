@@ -9,7 +9,8 @@ DemandIQ is an end-to-end retail analytics project for forecasting product deman
 - Build time-aware features without using future information.
 - Compare a simple baseline with a machine-learning forecasting model.
 - Convert forecasts into interpretable reorder recommendations.
-- Explore forecast quality and inventory signals in a Streamlit dashboard.
+- Generate recursive multi-day forecasts for each store/product series.
+- Explore forecast quality, future demand, and inventory signals in a Streamlit dashboard.
 - Add automated tests and CI as the project matures.
 
 ## Architecture (initial)
@@ -47,8 +48,9 @@ Run tests with `pytest`.
 1. Keep train/validation ordering chronological.
 2. Calculate features using only information available at prediction time.
 3. Compare against a transparent baseline.
-4. Report the evaluation window, metric definitions, and dataset source.
-5. Clearly label synthetic-data experiments; they do not establish production performance.
+4. Treat the validation score as rolling one-step-ahead performance; future multi-day forecasts are recursive and use prior predictions as lag inputs.
+5. Report the evaluation window, metric definitions, and dataset source.
+6. Clearly label synthetic-data experiments; they do not establish production performance.
 
 See [docs/roadmap.md](docs/roadmap.md) for planned milestones.
 
