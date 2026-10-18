@@ -13,15 +13,22 @@ ROOT = Path(__file__).resolve().parent
 if str(ROOT / "src") not in sys.path:
     sys.path.insert(0, str(ROOT / "src"))
 
+from demandiq.data import validate_sales_frame
 from demandiq.forecasting import evaluate_forecast, forecast_demand
 from demandiq.inventory import reorder_recommendation
 from scripts.make_demo_data import generate_demo_sales
 
 st.set_page_config(page_title="DemandIQ", page_icon="📦", layout="wide")
 st.title("📦 DemandIQ")
-st.caption("Demand forecasting and inventory intelligence · Synthetic demo data")
+st.caption("Demand forecasting and inventory intelligence")
 
 with st.sidebar:
+    st.header("Sales data")
+    uploaded_file = st.file_uploader(
+        "Upload daily sales CSV",
+        type=["csv"],
+        help="Required columns: date, store_id, product_id, sales. Each series must have every calendar day.",
+    )
     st.header("Scenario settings")
     days = st.slider("History length (days)", min_value=90, max_value=365, value=240, step=15)
     validation_days = st.slider("Validation window (days)", min_value=7, max_value=56, value=28, step=7)
@@ -29,8 +36,13 @@ with st.sidebar:
     lead_time = st.slider("Supplier lead time (days)", min_value=1, max_value=30, value=7)
     safety_days = st.slider("Safety stock (days of demand)", min_value=0, max_value=14, value=3)
 
-sales = generate_demo_sales(days=days)
 try:
+    if uploaded_file is not None:
+        sales = validate_sales_frame(pd.read_csv(uploaded_file))
+        st.caption("Data source: uploaded CSV")
+    else:
+        sales = generate_demo_sales(days=days)
+        st.caption("Data source: synthetic demo data")
     evaluation = evaluate_forecast(sales, validation_days=validation_days)
     future_forecast = forecast_demand(sales, horizon_days=forecast_horizon)
 except ValueError as exc:
@@ -43,11 +55,18 @@ metric_cols[1].metric("Validation RMSE", f'{evaluation.metrics["rmse"]:.2f} unit
 metric_cols[2].metric("Model WAPE", f'{evaluation.metrics["wape"]:.1%}')
 metric_cols[3].metric("Weekly-lag baseline WAPE", f'{evaluation.metrics["baseline_wape"]:.1%}')
 
-st.info(
-    "These results are from deterministic synthetic data. Validation uses a rolling "
-    "one-step-ahead holdout; future forecasts are recursive multi-step predictions. "
-    "Neither establishes real retail performance."
-)
+if uploaded_file is None:
+    st.info(
+        "These results use deterministic synthetic data. Validation uses a rolling "
+        "one-step-ahead holdout; future forecasts are recursive multi-step predictions. "
+        "Synthetic results do not establish real retail performance."
+    )
+else:
+    st.info(
+        "Results use the uploaded sales CSV. Validation uses a rolling one-step-ahead "
+        "holdout; future forecasts are recursive multi-step predictions. Check the "
+        "dataset and evaluation window before using results for business decisions."
+    )
 
 left, right = st.columns([1.5, 1])
 with left:
