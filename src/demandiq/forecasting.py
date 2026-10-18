@@ -104,6 +104,11 @@ def forecast_demand(frame: pd.DataFrame, horizon_days: int = 14) -> pd.DataFrame
         ["store_id", "product_id"], sort=False
     ):
         history = group.sort_values("date")["sales"].astype(float).tolist()
+        if len(history) < 29:
+            raise ValueError(
+                "Each store/product series needs at least 29 daily observations; "
+                f"store_id={store_id!r}, product_id={product_id!r} has {len(history)}."
+            )
         last_date = group["date"].max()
         for step in range(1, horizon_days + 1):
             forecast_date = last_date + pd.Timedelta(days=step)
