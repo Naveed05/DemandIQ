@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from scripts.benchmark import build_benchmark_report
+from demandiq.benchmark import build_benchmark_report
 
 
 def daily_sales(days: int = 100) -> pd.DataFrame:
