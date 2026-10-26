@@ -6,9 +6,8 @@ import argparse
 import json
 from pathlib import Path
 
-import pandas as pd
-
 from demandiq.benchmark import build_benchmark_report
+import pandas as pd
 
 
 ROOT = Path(__file__).resolve().parents[1]
