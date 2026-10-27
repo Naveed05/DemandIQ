@@ -8,7 +8,6 @@ from pathlib import Path
 
 import pandas as pd
 
-from demandiq.benchmark import build_benchmark_report
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -30,6 +29,8 @@ def main() -> None:
         help="Directory for JSON metrics and CSV prediction reports",
     )
     args = parser.parse_args()
+
+    from demandiq.benchmark import build_benchmark_report
 
     frame = pd.read_csv(args.input)
     report, predictions, per_series = build_benchmark_report(
