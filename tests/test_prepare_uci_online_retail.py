@@ -3,7 +3,7 @@ from __future__ import annotations
 import pandas as pd
 import pytest
 
-from scripts.prepare_uci_online_retail import prepare_online_retail
+from demandiq.uci_online_retail import prepare_online_retail
 
 
 def sample_transactions() -> pd.DataFrame:
