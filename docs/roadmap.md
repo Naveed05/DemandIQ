@@ -16,8 +16,8 @@
 - [ ] Add reproducible experiment configuration
 
 ## Phase 3 — Real data and persistence
-- [ ] Add a documented adapter for a public retail dataset
-- [ ] Document license, provenance, transformations, and limitations
+- [x] Add a documented adapter for a public retail dataset (UCI Online Retail)
+- [x] Document license, provenance, transformations, and limitations for the adapter
 - [ ] Add database-backed storage and schema migrations
 - [ ] Separate demo-data generation from application runtime
 
