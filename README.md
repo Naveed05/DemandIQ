@@ -66,6 +66,35 @@ The input must be a prepared daily dataset with `date`, `store_id`, `product_id`
 
 The evaluation is rolling one-step-ahead: actual observations from earlier dates in the validation window are available as lag inputs for later validation dates. This is not the same as evaluating a fully recursive multi-day forecast. Do not claim that the model is better unless the measured results support that conclusion.
 
+## Preparing the UCI Online Retail dataset
+
+DemandIQ includes a reproducible adapter for the [UCI Online Retail dataset](https://archive.ics.uci.edu/dataset/352/online+retail). Review the dataset page for its source details and **CC BY 4.0** license/attribution requirements. Download the workbook yourself; the preparation script does not silently fetch external data.
+
+Install the optional Excel reader and development dependencies:
+
+```bash
+pip install -e ".[dev,data]"
+```
+
+Then run the adapter against the downloaded `Online Retail.xlsx` file:
+
+```bash
+python scripts/prepare_uci_online_retail.py --input "path/to/Online Retail.xlsx"
+```
+
+The default output is `data/processed/uci_online_retail_daily.csv`, which is ignored by Git. Run the benchmark on the prepared file:
+
+```bash
+python scripts/benchmark.py --input data/processed/uci_online_retail_daily.csv --validation-days 28
+```
+
+**Preparation assumptions and limitations**
+- The workbook does not contain store identifiers. The default country, `United Kingdom`, is used as a location proxy in `store_id`; it must not be described as store-level data.
+- Cancellation invoices (invoice numbers beginning with `C`) and non-positive quantities (returns/refunds or invalid quantity rows) are excluded. Sales are transaction quantities, not revenue.
+- Transactions are aggregated by calendar day and stock code. Missing dates between each product's first and last eligible transaction are filled with zero, which assumes no recorded sale means zero demand; it does not prove the product was in stock.
+- By default, only product series spanning at least 60 calendar days are retained. This is a span filter, not a guarantee of dense sales or adequate business history. The benchmark applies its own feature and holdout requirements.
+- The adapter prints the selected country, row count, product count, and date range. Inspect the output and benchmark report before interpreting results. Do not claim the model outperforms a baseline unless the measured metrics show that.
+
 ## Project layout
 - `src/demandiq/` — reusable data, feature, forecasting, and inventory logic
 - `scripts/` — reproducible demo-data generation
