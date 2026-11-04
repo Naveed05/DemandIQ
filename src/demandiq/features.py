@@ -31,7 +31,7 @@ def make_features(frame: pd.DataFrame) -> pd.DataFrame:
                 "Add explicit zero-sales rows where appropriate or correct the source data."
             )
 
-    data["day_of_week"] = data["date"].dt.dayofweek
+    data["day_of_week"] = data["date"].dt.day_of_week
     data["day_of_month"] = data["date"].dt.day
     data["month"] = data["date"].dt.month
     data["is_weekend"] = data["day_of_week"].isin([5, 6]).astype("int8")
