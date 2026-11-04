@@ -1,0 +1,7 @@
+services:
+  demandiq:
+    build: .
+    image: demandiq:local
+    ports:
+      - "8501:8501"
+    restart: unless-stopped
