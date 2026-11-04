@@ -27,3 +27,12 @@ jobs:
         run: pytest
       - name: Check style
         run: ruff check src tests scripts app.py
+      - name: Run end-to-end synthetic benchmark smoke test
+        run: |
+          python scripts/make_demo_data.py --days 120 --output /tmp/demandiq-smoke.csv
+          python scripts/benchmark.py --input /tmp/demandiq-smoke.csv --validation-days 14 --output-dir /tmp/demandiq-smoke-report
+          test -s /tmp/demandiq-smoke-report/metrics.json
+          test -s /tmp/demandiq-smoke-report/predictions.csv
+          test -s /tmp/demandiq-smoke-report/per_series_metrics.csv
+      - name: Build Docker image
+        run: docker build --tag demandiq:ci .
