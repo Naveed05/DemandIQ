@@ -19,7 +19,7 @@ def prepare_online_retail(
     assumption, not evidence that inventory was available on those dates.
     """
     if isinstance(min_history_days, bool) or not isinstance(min_history_days, int):
-        raise ValueError("min_history_days must be an integer")
+        raise TypeError("min_history_days must be an integer")
     if min_history_days < 29:
         raise ValueError("min_history_days must be at least 29 for DemandIQ lag features")
     required = {"InvoiceNo", "StockCode", "Quantity", "InvoiceDate", "Country"}
