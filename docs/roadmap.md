@@ -1,40 +1,30 @@
 # DemandIQ engineering roadmap
 
-## Phase 1 — Reliable foundation
-- [x] Package layout and setup instructions
-- [x] Input validation and deterministic synthetic demo data
-- [x] Leakage-aware lag and rolling features
-- [x] Chronological holdout evaluation with baseline metrics
-- [x] Reorder-point calculator and first dashboard
-- [x] Unit tests for core data and inventory behavior
+## Portfolio MVP release checklist
 
-## Phase 2 — Evaluation quality
-- [x] Run tests in CI and fix failures
-- [x] Add forecast evaluation plots and segment-level benchmark metrics
-- [x] Add explicit model-vs-baseline comparison
-- [x] Add transparent handling of zero-demand and intermittent series (zero rows retained; interpret per-SKU metrics carefully)
-- [x] Add reproducible benchmark configuration via CLI arguments and fixed model seed
+- [x] Package layout, installation instructions, and deterministic demo data
+- [x] Input validation and leakage-aware lag/rolling feature engineering
+- [x] Chronological forecast evaluation with MAE, RMSE, WAPE, and naive baselines
+- [x] Recursive multi-day forecasting
+- [x] SKU-level reorder point, safety buffer, stock cover, and stockout-risk recommendations
+- [x] Streamlit dashboard with sales/inventory uploads, forecast comparisons, and CSV exports
+- [x] Public UCI Online Retail adapter with provenance, license attribution, and documented transformation assumptions
+- [x] Unit tests, linting, and CI on Python 3.11 and 3.12
+- [x] CI end-to-end smoke test that generates demo data and produces all benchmark report files
+- [x] CI Docker image build
+- [x] Architecture, setup, data schemas, benchmark instructions, assumptions, and limitations documented
 
-## Phase 3 — Real data and persistence
-- [x] Add a documented adapter for a public retail dataset (UCI Online Retail)
-- [x] Document license, provenance, transformations, and limitations for the adapter
-- [ ] Run and publish a benchmark on the downloaded UCI workbook
-- [ ] Add database-backed storage and schema migrations
-- [x] Keep synthetic data generation separate from the application package (script imported by dashboard)
+**MVP release status: complete.** The required portfolio scope is implemented. CI verifies tests, lint, the synthetic-data benchmark workflow, and Docker image construction. The synthetic dataset is for reproducible functional validation only; it is not evidence of real-world forecasting accuracy.
 
-## Phase 4 — Production-style engineering
-- [x] Add CI, linting, and automated tests (Python 3.11 and 3.12)
-- [x] Add a Docker image and local Compose workflow
-- [ ] Add FastAPI prediction endpoints (not required for the Streamlit MVP)
-- [ ] Add experiment tracking and model artifact versioning
-- [ ] Add drift and data-quality monitoring
+## Optional extensions — outside the MVP release scope
 
-## Phase 5 — Portfolio polish
-- [x] Add architecture diagram and reproducible demo walkthrough
-- [x] Document trade-offs, assumptions, and known limitations
-- [ ] Capture dashboard screenshots from a running build
-- [ ] Publish only measured real-data metrics with the dataset and evaluation window stated
+These are future product improvements, not unfinished requirements for the portfolio MVP:
 
-**Release scope:** This repository is a complete portfolio MVP for a single-user local demo. It is not a production inventory platform. Remaining unchecked items require real dataset access, a running visual capture environment, or a deliberate expansion beyond the current scope.
+- Run and publish a measured benchmark using the downloaded UCI Online Retail workbook. This requires obtaining the external workbook and reviewing the resulting metrics; never invent or imply real-data results.
+- Capture dashboard screenshots from a locally running browser session for a richer portfolio presentation.
+- Add database-backed persistence and schema migrations.
+- Add FastAPI prediction endpoints.
+- Add experiment tracking, model artifact versioning, drift detection, and data-quality monitoring.
+- Extend inventory logic for purchase orders in transit, supplier minimum order quantities, pack sizes, expiry, storage capacity, promotions, and supplier lead-time uncertainty.
 
-**Rule:** A roadmap checkbox is not evidence of implementation. Mark items complete only after the change exists and is verified.
+**Scope boundary:** DemandIQ is a complete, single-user, local portfolio MVP and decision-support demonstration. It is not represented as a production-validated retail replenishment platform. Any future extension should be scoped, implemented, tested, and documented before being described as complete.
