@@ -131,10 +131,10 @@ def forecast_demand(frame: pd.DataFrame, horizon_days: int = 14) -> pd.DataFrame
             forecast_date = last_date + pd.Timedelta(days=step)
             recent_seven = np.asarray(history[-7:], dtype=float)
             row = {
-                "day_of_week": forecast_date.dayofweek,
+                "day_of_week": forecast_date.day_of_week,
                 "day_of_month": forecast_date.day,
                 "month": forecast_date.month,
-                "is_weekend": int(forecast_date.dayofweek in (5, 6)),
+                "is_weekend": int(forecast_date.day_of_week in (5, 6)),
                 "lag_1": history[-1],
                 "lag_7": history[-7],
                 "lag_14": history[-14],
