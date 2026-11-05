@@ -34,5 +34,6 @@ jobs:
           test -s /tmp/demandiq-smoke-report/metrics.json
           test -s /tmp/demandiq-smoke-report/predictions.csv
           test -s /tmp/demandiq-smoke-report/per_series_metrics.csv
+          test -s /tmp/demandiq-smoke-report/benchmark_summary.md
       - name: Build Docker image
         run: docker build --tag demandiq:ci .
