@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from demandiq.benchmark import build_benchmark_report
+from demandiq.benchmark import build_benchmark_report, build_benchmark_summary
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -24,7 +24,7 @@ def main() -> None:
         "--output-dir",
         type=Path,
         default=ROOT / "reports" / "benchmark",
-        help="Directory for JSON metrics and CSV prediction reports",
+        help="Directory for JSON metrics and CSV/Markdown reports",
     )
     args = parser.parse_args()
 
@@ -38,9 +38,12 @@ def main() -> None:
     )
     predictions.to_csv(args.output_dir / "predictions.csv", index=False)
     per_series.to_csv(args.output_dir / "per_series_metrics.csv", index=False)
+    summary = build_benchmark_summary(report)
+    (args.output_dir / "benchmark_summary.md").write_text(summary, encoding="utf-8")
 
     print(f"Benchmark reports written to: {args.output_dir}")
     print(json.dumps(report["metrics"], indent=2))
+    print(f"Human-readable insights: {args.output_dir / 'benchmark_summary.md'}")
     print("No performance claim is made beyond this dataset and evaluation setup.")
 
 
