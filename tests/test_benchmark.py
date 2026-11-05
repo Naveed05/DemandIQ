@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from demandiq.benchmark import build_benchmark_report
+from demandiq.benchmark import build_benchmark_report, build_benchmark_summary
 
 
 def daily_sales(days: int = 100) -> pd.DataFrame:
@@ -44,3 +44,30 @@ def test_benchmark_rejects_duplicate_daily_observations():
 def test_benchmark_rejects_nonpositive_validation_window():
     with pytest.raises(ValueError, match="positive integer"):
         build_benchmark_report(daily_sales(), validation_days=0)
+
+
+def test_benchmark_summary_identifies_best_method_and_comparison():
+    report, _, _ = build_benchmark_report(daily_sales(), validation_days=7)
+
+    summary = build_benchmark_summary(report)
+
+    assert "# DemandIQ benchmark insights" in summary
+    assert "| Random Forest |" in summary
+    assert "What performed best?" in summary
+    assert "Random Forest WAPE" in summary
+    assert "chronological holdout" in summary.lower()
+
+
+def test_benchmark_summary_rejects_missing_or_invalid_metrics():
+    with pytest.raises(ValueError, match="non-empty metrics"):
+        build_benchmark_summary({})
+
+    invalid = {
+        "metrics": {
+            "random_forest": {"mae": -1, "rmse": 1, "wape": 0.1},
+            "naive_last_day": {"mae": 1, "rmse": 1, "wape": 0.1},
+            "seasonal_naive_7_day": {"mae": 1, "rmse": 1, "wape": 0.1},
+        }
+    }
+    with pytest.raises(ValueError, match="invalid mae"):
+        build_benchmark_summary(invalid)
