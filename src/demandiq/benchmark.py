@@ -1,4 +1,4 @@
-"""Reproducible benchmark helpers for DemandIQ daily sales forecasts."""
+"""Reproducible benchmark helpers and human-readable insights for DemandIQ."""
 
 from __future__ import annotations
 
@@ -94,3 +94,97 @@ def build_benchmark_report(
         ),
     }
     return report, predictions[PREDICTION_COLUMNS], pd.DataFrame(per_series_rows)
+
+
+def build_benchmark_summary(report: dict[str, object]) -> str:
+    """Create a concise Markdown interpretation of a benchmark report."""
+    metrics = report.get("metrics")
+    if not isinstance(metrics, dict) or not metrics:
+        raise ValueError("report must contain a non-empty metrics mapping")
+
+    metric_names = ("mae", "rmse", "wape")
+    methods = ("random_forest", "naive_last_day", "seasonal_naive_7_day")
+    for method in methods:
+        if method not in metrics or not isinstance(metrics[method], dict):
+            raise ValueError(f"report is missing metrics for {method}")
+        for metric in metric_names:
+            value = metrics[method].get(metric)
+            if not isinstance(value, (int, float)) or not np.isfinite(value) or value < 0:
+                raise ValueError(f"report contains an invalid {metric} value for {method}")
+
+    labels = {
+        "random_forest": "Random Forest",
+        "naive_last_day": "Naive (last day)",
+        "seasonal_naive_7_day": "Seasonal naive (7-day)",
+    }
+    lines = [
+        "# DemandIQ benchmark insights",
+        "",
+        "## Dataset and evaluation",
+        "",
+        f"- Rows: {report.get('dataset_rows', 'n/a'):,}",
+        f"- Stores / location proxies: {report.get('store_count', 'n/a')}",
+        f"- Products: {report.get('product_count', 'n/a')}",
+        f"- Store-product series: {report.get('series_count', 'n/a')}",
+        f"- Date range: {report.get('date_start', 'n/a')} to {report.get('date_end', 'n/a')}",
+        f"- Validation rows: {report.get('validation_rows', 'n/a'):,}",
+        f"- Requested validation days: {report.get('validation_days_requested', 'n/a')}",
+        "",
+        str(report.get("evaluation_method", "")),
+        "",
+        "## Overall metrics",
+        "",
+        "| Method | MAE (units) | RMSE (units) | WAPE |",
+        "| --- | ---: | ---: | ---: |",
+    ]
+    for method in methods:
+        values = metrics[method]
+        lines.append(
+            f"| {labels[method]} | {values['mae']:.3f} | {values['rmse']:.3f} "
+            f"| {values['wape']:.2%} |"
+        )
+
+    lines.extend(["", "## What performed best?", ""])
+    for metric in metric_names:
+        winner = min(methods, key=lambda method: metrics[method][metric])
+        formatted = (
+            f"{metrics[winner][metric]:.2%}"
+            if metric == "wape"
+            else f"{metrics[winner][metric]:.3f}"
+        )
+        lines.append(f"- **{metric.upper()}**: {labels[winner]} ({formatted}).")
+
+    best_baseline = min(
+        ("naive_last_day", "seasonal_naive_7_day"),
+        key=lambda method: metrics[method]["wape"],
+    )
+    baseline_wape = metrics[best_baseline]["wape"]
+    model_wape = metrics["random_forest"]["wape"]
+    if baseline_wape > 0:
+        change = (baseline_wape - model_wape) / baseline_wape * 100
+        if change > 0:
+            comparison = f"Random Forest WAPE is {change:.1f}% lower than the best baseline ({labels[best_baseline]})."
+        elif change < 0:
+            comparison = f"Random Forest WAPE is {abs(change):.1f}% higher than the best baseline ({labels[best_baseline]})."
+        else:
+            comparison = f"Random Forest and the best baseline ({labels[best_baseline]}) have equal WAPE."
+    else:
+        comparison = (
+            "The best baseline has zero WAPE, so a relative WAPE comparison is undefined."
+        )
+    lines.extend(["", comparison, ""])
+    lines.extend(
+        [
+            "## Interpretation and limitations",
+            "",
+            str(report.get("interpretation_note", "")),
+            "",
+            (
+                "This report is specific to the supplied dataset, preprocessing choices, "
+                "and chronological holdout. It is not a guarantee of future accuracy. "
+                "Review data quality and per-series metrics before drawing business conclusions."
+            ),
+            "",
+        ]
+    )
+    return "\n".join(lines)
