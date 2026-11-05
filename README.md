@@ -14,6 +14,7 @@ DemandIQ is a portfolio-grade retail analytics MVP that turns daily SKU sales in
 - Generates recursive multi-day forecasts for each store/SKU.
 - Produces SKU-level replenishment suggestions using lead-time demand, a days-of-demand buffer, recent demand variability, stock cover, and stockout-risk bands.
 - Exports forecast and replenishment tables as CSV.
+- Creates a human-readable Markdown benchmark insights report, identifying the best method per metric and comparing Random Forest WAPE with the strongest baseline.
 - Runs locally with Python or inside Docker.
 
 ## Architecture
@@ -31,6 +32,7 @@ flowchart TD
     F --> I
     I --> G
     G --> J[CSV exports]
+    D --> K[JSON metrics + CSV predictions + Markdown insights]
 ```
 
 ## Quick start
@@ -138,6 +140,7 @@ Reports are written to `reports/benchmark/`:
 - `metrics.json`: dataset summary, evaluation method, and overall MAE/RMSE/WAPE for the Random Forest and both baselines.
 - `predictions.csv`: actual and predicted units for each validation row.
 - `per_series_metrics.csv`: model and baseline metrics by store/product.
+- `benchmark_summary.md`: readable interpretation with the best-performing method for each metric and Random Forest's WAPE comparison against the best baseline.
 
 The holdout is chronological and rolling one-step-ahead: observed sales from earlier validation dates are used as lag inputs for later dates. This is distinct from the recursive future forecast shown in the dashboard. Lower MAE, RMSE, and WAPE are better. Results apply only to the selected dataset and evaluation design; do not claim the model is superior unless the measured metrics support it.
 
@@ -176,7 +179,7 @@ DemandIQ/
 │   ├── features.py                # Calendar, lag and rolling features
 │   ├── forecasting.py             # Evaluation and recursive forecasts
 │   ├── inventory.py               # Reorder point and risk calculations
-│   ├── benchmark.py               # Reproducible benchmark reports
+│   ├── benchmark.py               # Benchmark metrics and insight summaries
 │   └── uci_online_retail.py       # UCI workbook preparation
 ├── scripts/
 │   ├── make_demo_data.py
