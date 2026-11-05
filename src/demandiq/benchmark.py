@@ -179,9 +179,11 @@ def build_benchmark_summary(report: dict[str, object]) -> str:
             "",
             str(report.get("interpretation_note", "")),
             "",
-            "This report is specific to the supplied dataset, preprocessing choices, "
-            "and chronological holdout. It is not a guarantee of future accuracy. "
-            "Review data quality and per-series metrics before drawing business conclusions.",
+            (
+                "This report is specific to the supplied dataset, preprocessing choices, "
+                "and chronological holdout. It is not a guarantee of future accuracy. "
+                "Review data quality and per-series metrics before drawing business conclusions."
+            ),
             "",
         ]
     )
