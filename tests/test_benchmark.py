@@ -54,7 +54,8 @@ def test_benchmark_summary_identifies_best_method_and_comparison():
     assert "# DemandIQ benchmark insights" in summary
     assert "| Random Forest |" in summary
     assert "What performed best?" in summary
-    assert "Random Forest WAPE" in summary
+    assert "WAPE" in summary
+    assert "best baseline" in summary.lower()
     assert "chronological holdout" in summary.lower()
 
 
