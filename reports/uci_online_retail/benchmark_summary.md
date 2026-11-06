@@ -12,7 +12,7 @@
 - Target: units sold (Quantity), not revenue.
 - Returns/refunds (non-positive quantities) and cancellation invoices are excluded. Missing dates within each product's observed span are filled with zero; this is not evidence that inventory was available.
 
-Evaluation is a chronological rolling one-step-ahead holdout. For later validation dates, previously observed validation sales are available to lag features. This is not the same as a fully recursive 28-day forecast.
+Evaluation is a chronological rolling one-step-ahead holdout. For later validation dates, previously observed validation sales are available to lag features. Croston SBA is recalculated at each validation timestamp using only observations strictly before that timestamp. This is not the same as a fully recursive 28-day forecast.
 
 ## Overall metrics
 
@@ -21,22 +21,23 @@ Evaluation is a chronological rolling one-step-ahead holdout. For later validati
 | Random Forest | 66.874 | 266.237 | 102.35% |
 | Naive (last day) | 79.634 | 372.643 | 121.88% |
 | Seasonal naive (7-day) | 66.499 | 362.975 | 101.78% |
+| Croston SBA (alpha=0.1) | **58.921** | **264.397** | **90.18%** |
 
 ## Findings
 
-- **Best MAE:** Seasonal naive (7-day) (66.499).
-- **Best RMSE:** Random Forest (266.237).
-- **Best WAPE:** Seasonal naive (7-day) (101.78%).
-- Random Forest WAPE is **0.56% higher** than the best baseline (Seasonal naive (7-day)).
-- Random Forest has lower RMSE than both baselines, while the seasonal-naive baseline has slightly lower MAE and WAPE.
-- Random Forest WAPE is **102.35%**: aggregate absolute errors are slightly larger than total actual units in this holdout. This highlights the difficulty of intermittent, highly variable retail demand.
-- Random Forest has lower WAPE than the seasonal-naive method on **24 of 100** selected product series.
+- **Best MAE:** Croston SBA (58.921).
+- **Best RMSE:** Croston SBA (264.397).
+- **Best WAPE:** Croston SBA (90.18%).
+- Croston SBA WAPE is **11.40% lower** than the best of the original naive baselines (seasonal naive, 101.78%).
+- Croston SBA achieves lower aggregate MAE, RMSE, and WAPE than Random Forest on this selected historical holdout.
+- Croston SBA has the lowest per-series WAPE on 64 of 100 selected product series (ties included).
+- WAPE below 100% means aggregate absolute error is below total actual units for this holdout; it does not mean forecasts are accurate for every SKU.
 
 ## Interpretation and limitations
 
-This is a measured benchmark on a selected top-100 product slice, not a claim about every product in the UCI dataset or a live retailer. The Random Forest does not beat the seasonal-naive baseline on WAPE in this experiment. Use these results to motivate further work (intermittent-demand methods, product segmentation, calendar/event features, and per-SKU model selection), not to claim production readiness.
+This is a measured benchmark on a selected top-100 product slice, not a claim about every product in the UCI dataset or a live retailer. Croston SBA is a useful benchmark candidate for this slice, but its performance must be checked across other product selections, time periods, and retailers before any production model-selection decision. It is not automatically used by the dashboard forecast.
 
-Country is only a location proxy, not a store. The data is historical (2010–2011), returns/cancellations are excluded, and zero-filled gaps can conflate no demand with unavailable inventory. The chronological evaluation uses observed prior holdout actuals for later lag features; multi-step recursive performance may differ.
+Country is only a location proxy, not a store. The data is historical (2010–2011), returns/cancellations are excluded, and zero-filled gaps can conflate no demand with unavailable inventory. The chronological evaluation uses observed prior holdout actuals for later lag features; multi-step recursive performance may differ. Croston SBA uses a fixed alpha of 0.1 and has not been tuned.
 
 ## Reproducibility
 
