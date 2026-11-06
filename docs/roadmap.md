@@ -26,4 +26,8 @@
 - Add experiment tracking, model artifact versioning, drift detection, and data-quality monitoring.
 - Extend inventory logic for purchase orders in transit, supplier minimum order quantities, pack sizes, expiry, storage capacity, promotions, lost sales, and supplier lead-time uncertainty.
 
-## Real-data benchmark milestone\n\nThe UCI Online Retail benchmark has been run on the selected top-100 product slice (35,082 daily rows, 100 series, 28-day chronological holdout). Random Forest achieved the best RMSE, while the seven-day seasonal-naive baseline slightly outperformed it on MAE and WAPE. See `reports/uci_online_retail/benchmark_summary.md` and `metrics.json`. This is a measured historical benchmark, not evidence of production readiness.\n\n**Scope boundary:** DemandIQ is a complete, single-user, local portfolio MVP and decision-support demonstration. It is not represented as a production-validated retail replenishment platform. Any future extension should be scoped, implemented, tested, and documented before being described as complete.
+## Real-data benchmark milestone
+
+The UCI Online Retail benchmark has been run on the selected top-100 product slice (35,082 daily rows, 100 series, 28-day chronological holdout). Random Forest achieved the best RMSE, while the seven-day seasonal-naive baseline slightly outperformed it on MAE and WAPE. See `reports/uci_online_retail/benchmark_summary.md` and `metrics.json`. This is a measured historical benchmark, not evidence of production readiness.
+
+**Scope boundary:** DemandIQ is a complete, single-user, local portfolio MVP and decision-support demonstration. It is not represented as a production-validated retail replenishment platform. Any future extension should be scoped, implemented, tested, and documented before being described as complete.
