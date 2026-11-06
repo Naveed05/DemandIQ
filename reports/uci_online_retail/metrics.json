@@ -7,7 +7,7 @@
   "date_end": "2011-12-09",
   "validation_days_requested": 28,
   "validation_rows": 2769,
-  "evaluation_method": "Chronological rolling one-step-ahead holdout; observed sales from earlier validation dates are used as lag inputs for later dates.",
+  "evaluation_method": "Chronological rolling one-step-ahead holdout; observed sales from earlier validation dates are used as lag inputs for later dates. Croston SBA is recalculated using observations strictly before each forecast date.",
   "metrics": {
     "random_forest": {
       "mae": 66.87428316492415,
@@ -23,6 +23,11 @@
       "mae": 66.49909714698447,
       "rmse": 362.9749953333835,
       "wape": 1.0177645615237505
+    },
+    "croston_sba": {
+      "mae": 58.92074520620077,
+      "rmse": 264.39672713273615,
+      "wape": 0.901778354627795
     }
   },
   "interpretation_note": "Lower MAE, RMSE, and WAPE are better. Results describe this dataset and evaluation setup only; they do not guarantee future business performance.",
@@ -40,11 +45,13 @@
     "country_transaction_rows": 495478,
     "eligible_positive_sales_transaction_rows": 486286,
     "target": "Daily units sold (Quantity), not revenue.",
-    "zero_fill_assumption": "Dates between each product's first and last eligible transaction are filled with zero; this does not prove the product was in stock."
+    "zero_fill_assumption": "Dates between each product's first and last eligible transaction are filled with zero; this does not prove the product was in stock.",
+    "croston_sba_alpha": 0.1
   },
   "metrics_context": {
     "actual_validation_units": 180922.0,
     "random_forest_absolute_error_units": 185174.89008367498,
-    "interpretation": "Random Forest WAPE above 100% means its aggregate absolute error exceeds the total actual units in this validation sample."
+    "croston_sba_absolute_error_units": 163137.0,
+    "interpretation": "Croston SBA WAPE below 100% means its aggregate absolute error is below total actual units in this validation sample. This does not imply good SKU-level accuracy."
   }
 }
