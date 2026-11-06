@@ -1,0 +1,50 @@
+{
+  "dataset_rows": 35082,
+  "store_count": 1,
+  "product_count": 100,
+  "series_count": 100,
+  "date_start": "2010-12-01",
+  "date_end": "2011-12-09",
+  "validation_days_requested": 28,
+  "validation_rows": 2769,
+  "evaluation_method": "Chronological rolling one-step-ahead holdout; observed sales from earlier validation dates are used as lag inputs for later dates.",
+  "metrics": {
+    "random_forest": {
+      "mae": 66.87428316492415,
+      "rmse": 266.23688782509356,
+      "wape": 1.0235067602816406
+    },
+    "naive_last_day": {
+      "mae": 79.63416395810762,
+      "rmse": 372.6426175365321,
+      "wape": 1.2187959452139596
+    },
+    "seasonal_naive_7_day": {
+      "mae": 66.49909714698447,
+      "rmse": 362.9749953333835,
+      "wape": 1.0177645615237505
+    }
+  },
+  "interpretation_note": "Lower MAE, RMSE, and WAPE are better. Results describe this dataset and evaluation setup only; they do not guarantee future business performance.",
+  "dataset": {
+    "name": "UCI Online Retail",
+    "source": "https://archive.ics.uci.edu/dataset/352/online+retail",
+    "license": "CC BY 4.0; attribution and license details are on the source page",
+    "country_filter": "United Kingdom",
+    "location_field_note": "The source contains no store identifier; country is used as a location proxy only.",
+    "product_selection": "Top 100 eligible products by total positive units, with product code as deterministic tie-break.",
+    "minimum_product_history_days": 60,
+    "eligible_products_before_top_n": 3509,
+    "selected_products": 100,
+    "source_transaction_rows": 541909,
+    "country_transaction_rows": 495478,
+    "eligible_positive_sales_transaction_rows": 486286,
+    "target": "Daily units sold (Quantity), not revenue.",
+    "zero_fill_assumption": "Dates between each product's first and last eligible transaction are filled with zero; this does not prove the product was in stock."
+  },
+  "metrics_context": {
+    "actual_validation_units": 180922.0,
+    "random_forest_absolute_error_units": 185174.89008367498,
+    "interpretation": "Random Forest WAPE above 100% means its aggregate absolute error exceeds the total actual units in this validation sample."
+  }
+}
