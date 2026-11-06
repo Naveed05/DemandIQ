@@ -2,7 +2,7 @@
 
 DemandIQ is a portfolio-grade retail analytics MVP that turns daily SKU sales into demand forecasts, model comparisons, and transparent replenishment recommendations. It includes a Streamlit dashboard, reusable Python package, reproducible benchmark workflow, public-dataset adapter, automated tests, and a Docker deployment path.
 
-> **Project status:** Working portfolio MVP. CI is configured for Python 3.11 and 3.12. The demo uses synthetic data. A real UCI benchmark report is not included until the workbook has been downloaded, prepared, and evaluated; no real-world accuracy claim is made.
+> **Project status:** Working portfolio MVP. CI is configured for Python 3.11 and 3.12. The dashboard demo uses synthetic data, and a measured UCI Online Retail benchmark is included for a documented top-100 UK product slice. The report makes no claim of production accuracy.
 
 ## What it does
 
@@ -157,17 +157,27 @@ pip install -e ".[dev,data]"
 Prepare daily sales and run the benchmark:
 
 ```bash
-python scripts/prepare_uci_online_retail.py --input "path/to/Online Retail.xlsx"
-python scripts/benchmark.py --input data/processed/uci_online_retail_daily.csv --validation-days 28
+python scripts/prepare_uci_online_retail.py --input "path/to/Online Retail.xlsx" --country "United Kingdom" --min-history-days 60 --max-products 100
+python scripts/benchmark.py --input data/processed/uci_online_retail_daily.csv --validation-days 28 --output-dir reports/uci_online_retail
 ```
 
-The default output is ignored by Git. Preparation assumptions:
+The default output is ignored by Git. The adapter selects the 100 eligible products with the highest positive unit volume by default so the benchmark is practical on a laptop. Use `--max-products 0` to retain all eligible products; this can create more than one million daily rows and substantially increase training time. Preparation assumptions:
 - The dataset has no store IDs. Country (default: United Kingdom) is used as a location proxy and must not be represented as store-level data.
 - Cancellation invoices and non-positive quantities (returns/refunds) are excluded. The target is quantity sold, not revenue.
 - Transactions are aggregated by date and stock code. Dates between a product's first and last eligible transaction are filled with zero; this assumes no recorded sale means zero demand and does not prove the item was in stock.
 - Product series are filtered by a minimum calendar span (60 days by default). This does not guarantee dense sales or sufficient signal for reliable forecasting.
 
-Do not publish benchmark numbers until the workbook has actually been processed and the generated report has been reviewed.
+### Measured benchmark snapshot
+
+The uploaded UCI workbook was processed for the United Kingdom and evaluated on the top 100 eligible products (35,082 daily rows; 100 product series; 2,769 validation predictions across the final 28 calendar days). Results are specific to this selected historical slice:
+
+| Method | MAE (units) | RMSE (units) | WAPE |
+| --- | ---: | ---: | ---: |
+| Random Forest | 66.874 | **266.237** | 102.35% |
+| Naive (last day) | 79.634 | 372.643 | 121.88% |
+| Seasonal naive (7-day) | **66.499** | 362.975 | **101.78%** |
+
+Random Forest achieved the best RMSE, but the seasonal-naive baseline narrowly achieved better MAE and WAPE. Random Forest WAPE was 0.56% higher than the best baseline. WAPE above 100% means aggregate absolute errors exceeded actual units sold in this holdout. This is an honest baseline comparison, not a claim that the model is production-ready. See [`reports/uci_online_retail/benchmark_summary.md`](reports/uci_online_retail/benchmark_summary.md) and [`metrics.json`](reports/uci_online_retail/metrics.json) for scope, full precision, and caveats.
 
 ## Repository structure
 
