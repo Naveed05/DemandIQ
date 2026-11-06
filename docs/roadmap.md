@@ -4,7 +4,7 @@
 
 - [x] Package layout, installation instructions, and deterministic demo data
 - [x] Input validation and leakage-aware lag/rolling feature engineering
-- [x] Chronological forecast evaluation with MAE, RMSE, WAPE, and naive baselines
+- [x] Chronological forecast evaluation with MAE, RMSE, WAPE, last-day and seasonal-naive baselines\n- [x] Croston SBA intermittent-demand benchmark with leakage-safe expanding-history predictions and unit tests
 - [x] Recursive multi-day forecasting
 - [x] SKU-level reorder point, safety buffer, stock cover, and stockout-risk recommendations
 - [x] Streamlit dashboard with sales/inventory uploads, forecast comparisons, and CSV exports
@@ -20,7 +20,7 @@
 ## Optional extensions — outside the MVP release scope
 
 - [x] Run and publish a measured benchmark using the downloaded UCI Online Retail workbook. The committed report covers the top 100 eligible UK products and explicitly records the preprocessing and evaluation assumptions.
-- Capture dashboard screenshots from a locally running browser session for a richer portfolio presentation.
+- Re-run the UCI Online Retail benchmark with Croston SBA and publish the updated comparison after reviewing the new results.\n- Capture dashboard screenshots from a locally running browser session for a richer portfolio presentation.
 - Add database-backed persistence and schema migrations.
 - Add FastAPI prediction endpoints.
 - Add experiment tracking, model artifact versioning, drift detection, and data-quality monitoring.
