@@ -175,9 +175,9 @@ The uploaded UCI workbook was processed for the United Kingdom and evaluated on 
 | --- | ---: | ---: | ---: |
 | Random Forest | 66.874 | **266.237** | 102.35% |
 | Naive (last day) | 79.634 | 372.643 | 121.88% |
-| Seasonal naive (7-day) | **66.499** | 362.975 | **101.78%** |
+| Seasonal naive (7-day) | 66.499 | 362.975 | 101.78% |\n| Croston SBA (alpha=0.1) | **58.921** | **264.397** | **90.18%** |
 
-Random Forest achieved the best RMSE, but the seasonal-naive baseline narrowly achieved better MAE and WAPE. Random Forest WAPE was 0.56% higher than the best baseline. WAPE above 100% means aggregate absolute errors exceeded actual units sold in this holdout. This is an honest baseline comparison, not a claim that the model is production-ready. See [`reports/uci_online_retail/benchmark_summary.md`](reports/uci_online_retail/benchmark_summary.md) and [`metrics.json`](reports/uci_online_retail/metrics.json) for scope, full precision, and caveats.
+Croston SBA achieved the lowest aggregate MAE, RMSE, and WAPE in this experiment. Its WAPE was 11.40% lower than the best of the original naive baselines. It is a benchmark comparator—not the dashboard's default forecast—and its fixed alpha and results need validation on other datasets and time periods. The chronological rolling holdout uses observed earlier validation actuals for later lag features; this is not a fully recursive 28-day forecast. See [`reports/uci_online_retail/benchmark_summary.md`](reports/uci_online_retail/benchmark_summary.md) and [`metrics.json`](reports/uci_online_retail/metrics.json) for scope, full precision, and caveats.
 
 ## Repository structure
 
@@ -203,7 +203,7 @@ DemandIQ/
 
 ## Model and inventory assumptions
 
-- Model: RandomForestRegressor with 160 trees, minimum leaf size 2, and fixed random seed.
+- Model: RandomForestRegressor with 160 trees, minimum leaf size 2, and fixed random seed.\n- Intermittent-demand comparator: Croston SBA with alpha=0.1, recalculated at each validation date using only prior observations. It is not currently the dashboard's default forecast model.
 - Features: calendar fields, lagged demand, and shifted rolling mean/standard deviation.
 - Evaluation: chronological rolling one-step-ahead holdout; the benchmark compares Random Forest, last-day naive, seven-day seasonal naive, and Croston SBA. The dashboard continues to display the seven-day seasonal-naive baseline.
 - Future forecasts: recursive multi-step predictions; prediction errors can compound across the horizon.
