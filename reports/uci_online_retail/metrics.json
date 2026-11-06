@@ -51,7 +51,7 @@
   "metrics_context": {
     "actual_validation_units": 180922.0,
     "random_forest_absolute_error_units": 185174.89008367498,
-    "croston_sba_absolute_error_units": 163137.0,
+    "croston_sba_absolute_error_units": 163151.54347596993,
     "interpretation": "Croston SBA WAPE below 100% means its aggregate absolute error is below total actual units in this validation sample. This does not imply good SKU-level accuracy."
   }
 }
