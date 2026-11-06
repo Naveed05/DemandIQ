@@ -20,7 +20,7 @@
 ## Optional extensions — outside the MVP release scope
 
 - [x] Run and publish a measured benchmark using the downloaded UCI Online Retail workbook. The committed report covers the top 100 eligible UK products and explicitly records the preprocessing and evaluation assumptions.
-- Re-run the UCI Online Retail benchmark with Croston SBA and publish the updated comparison after reviewing the new results.\n- Capture dashboard screenshots from a locally running browser session for a richer portfolio presentation.
+- [x] Re-run the UCI Online Retail benchmark with Croston SBA and publish the four-method comparison, aggregate metrics, and per-series error distributions.\n- Capture dashboard screenshots from a locally running browser session for a richer portfolio presentation.
 - Add database-backed persistence and schema migrations.
 - Add FastAPI prediction endpoints.
 - Add experiment tracking, model artifact versioning, drift detection, and data-quality monitoring.
