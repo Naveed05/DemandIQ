@@ -62,7 +62,9 @@ def main() -> None:
     )
     print(f"Prepared rows: {len(prepared):,}")
     print(f"Products: {prepared['product_id'].nunique():,}")
-    print(f"Date range: {prepared['date'].min().date()} to {prepared['date'].max().date()}")
+    start_date = prepared["date"].min().date()
+    end_date = prepared["date"].max().date()
+    print(f"Date range: {start_date} to {end_date}")
     print(f"Output: {args.output}")
     print("Note: this dataset has no store ID; country is only a location proxy.")
 
