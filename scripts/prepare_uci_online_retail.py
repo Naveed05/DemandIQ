@@ -29,20 +29,37 @@ def main() -> None:
         default=60,
         help="Minimum inclusive calendar span per SKU (at least 29; default 60)",
     )
+    parser.add_argument(
+        "--max-products",
+        type=int,
+        default=100,
+        help="Keep top N eligible products by positive units (default 100); use 0 for all",
+    )
     args = parser.parse_args()
+    if args.max_products < 0:
+        parser.error("--max-products must be 0 (all products) or a positive integer")
     try:
         transactions = pd.read_excel(args.input)
     except ImportError as exc:
         raise SystemExit(
             'Reading .xlsx requires openpyxl. Install it with: pip install -e ".[data]"'
         ) from exc
+    max_products = args.max_products or None
     prepared = prepare_online_retail(
-        transactions, country=args.country, min_history_days=args.min_history_days
+        transactions,
+        country=args.country,
+        min_history_days=args.min_history_days,
+        max_products=max_products,
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     prepared.to_csv(args.output, index=False, date_format="%Y-%m-%d")
     print(f"Source: {UCI_PAGE}")
     print(f"Country/location proxy: {args.country}")
+    print(
+        f"Product selection: top {args.max_products} by positive units"
+        if max_products
+        else "Product selection: all eligible products"
+    )
     print(f"Prepared rows: {len(prepared):,}")
     print(f"Products: {prepared['product_id'].nunique():,}")
     print(f"Date range: {prepared['date'].min().date()} to {prepared['date'].max().date()}")
