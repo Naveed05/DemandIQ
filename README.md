@@ -10,7 +10,7 @@ DemandIQ is a portfolio-grade retail analytics MVP that turns daily SKU sales in
 - Validates required fields, duplicate records, non-negative sales, and complete daily calendars.
 - Builds calendar features, 1/7/14/28-day lags, and shifted seven-day rolling statistics.
 - Trains a Random Forest demand model and evaluates it against last-day and seven-day seasonal-naive baselines.
-- Reports MAE, RMSE, and WAPE on a chronological rolling one-step-ahead holdout.
+- Reports MAE, RMSE, and WAPE on a chronological rolling one-step-ahead holdout.\n- Compares Random Forest with last-day, seven-day seasonal-naive, and Croston SBA intermittent-demand baselines.
 - Generates recursive multi-day forecasts for each store/SKU.
 - Produces SKU-level replenishment suggestions using lead-time demand, a days-of-demand buffer, recent demand variability, stock cover, and stockout-risk bands.
 - Exports forecast and replenishment tables as CSV.
@@ -139,7 +139,7 @@ python scripts/benchmark.py --input path/to/daily_sales.csv --validation-days 28
 Reports are written to `reports/benchmark/`:
 - `metrics.json`: dataset summary, evaluation method, and overall MAE/RMSE/WAPE for the Random Forest and both baselines.
 - `predictions.csv`: actual and predicted units for each validation row.
-- `per_series_metrics.csv`: model and baseline metrics by store/product.
+- `per_series_metrics.csv`: model and all baseline metrics by store/product.
 - `benchmark_summary.md`: readable interpretation with the best-performing method for each metric and Random Forest's WAPE comparison against the best baseline.
 
 The holdout is chronological and rolling one-step-ahead: observed sales from earlier validation dates are used as lag inputs for later dates. This is distinct from the recursive future forecast shown in the dashboard. Lower MAE, RMSE, and WAPE are better. Results apply only to the selected dataset and evaluation design; do not claim the model is superior unless the measured metrics support it.
@@ -205,7 +205,7 @@ DemandIQ/
 
 - Model: RandomForestRegressor with 160 trees, minimum leaf size 2, and fixed random seed.
 - Features: calendar fields, lagged demand, and shifted rolling mean/standard deviation.
-- Evaluation: chronological rolling one-step-ahead holdout; the dashboard also displays the seven-day seasonal-naive baseline.
+- Evaluation: chronological rolling one-step-ahead holdout; the benchmark compares Random Forest, last-day naive, seven-day seasonal naive, and Croston SBA. The dashboard continues to display the seven-day seasonal-naive baseline.
 - Future forecasts: recursive multi-step predictions; prediction errors can compound across the horizon.
 - Inventory: lead-time demand plus configurable safety days and a demand-variability buffer. The z multiplier is an assumption, not a calibrated service-level guarantee.
 - Not yet modelled: purchase orders already in transit, supplier minimum order quantities, pack sizes, expiry, storage capacity, promotions, lost sales, stockout-censored demand, and supplier-specific lead-time uncertainty.
