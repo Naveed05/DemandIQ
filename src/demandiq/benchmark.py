@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 
 from demandiq.data import validate_sales_frame
+from demandiq.demand_patterns import demand_pattern_metrics
 from demandiq.forecasting import evaluate_forecast
 from demandiq.intermittent import croston_sba_forecast
 
@@ -79,13 +80,24 @@ def build_benchmark_report(
     }
 
     per_series_rows: list[dict[str, object]] = []
+    cutoff = sorted(clean["date"].unique())[-validation_days]
     for (store_id, product_id), group in predictions.groupby(
         ["store_id", "product_id"], sort=True
     ):
+        training_history = clean.loc[
+            (clean["store_id"] == store_id)
+            & (clean["product_id"] == product_id)
+            & (clean["date"] < cutoff),
+            "sales",
+        ]
+        pattern = demand_pattern_metrics(training_history.to_numpy(dtype=float))
         row: dict[str, object] = {
             "store_id": str(store_id),
             "product_id": str(product_id),
             "validation_rows": len(group),
+            "demand_pattern": pattern["pattern"],
+            "adi": pattern["adi"],
+            "cv2": pattern["cv2"],
         }
         for name, column in columns.items():
             for metric, value in _metrics(group["sales"], group[column]).items():
@@ -110,6 +122,12 @@ def build_benchmark_report(
             "forecast date."
         ),
         "metrics": metrics,
+        "demand_pattern_counts": (
+            pd.Series([row["demand_pattern"] for row in per_series_rows])
+            .value_counts()
+            .sort_index()
+            .to_dict()
+        ),
         "interpretation_note": (
             "Lower MAE, RMSE, and WAPE are better. Results describe this dataset "
             "and evaluation setup only; they do not guarantee future business performance."
