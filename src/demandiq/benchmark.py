@@ -178,6 +178,19 @@ def build_benchmark_summary(report: dict[str, object]) -> str:
         "",
         str(report.get("evaluation_method", "")),
         "",
+        "## Demand pattern distribution (training history)",
+        "",
+    ]
+    pattern_counts = report.get("demand_pattern_counts", {})
+    if isinstance(pattern_counts, dict) and pattern_counts:
+        lines.extend(
+            f"- **{pattern}**: {count} series"
+            for pattern, count in sorted(pattern_counts.items())
+        )
+    else:
+        lines.append("- No demand-pattern summary available.")
+    lines.extend([
+        "",
         "## Overall metrics",
         "",
         "| Method | MAE (units) | RMSE (units) | WAPE |",
