@@ -195,7 +195,7 @@ def build_benchmark_summary(report: dict[str, object]) -> str:
         "",
         "| Method | MAE (units) | RMSE (units) | WAPE |",
         "| --- | ---: | ---: | ---: |",
-    ]
+    ])
     for method in methods:
         values = metrics[method]
         lines.append(
