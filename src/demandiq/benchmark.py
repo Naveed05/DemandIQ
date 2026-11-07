@@ -7,6 +7,7 @@ import pandas as pd
 
 from demandiq.data import validate_sales_frame
 from demandiq.forecasting import evaluate_forecast
+from demandiq.intermittent import croston_sba_forecast
 
 PREDICTION_COLUMNS = [
     "date",
@@ -16,6 +17,7 @@ PREDICTION_COLUMNS = [
     "prediction",
     "naive_prediction",
     "seasonal_naive_prediction",
+    "croston_sba_prediction",
 ]
 
 
@@ -29,10 +31,31 @@ def _metrics(actual: pd.Series, predicted: pd.Series) -> dict[str, float]:
     }
 
 
+def _add_croston_predictions(clean: pd.DataFrame, predictions: pd.DataFrame) -> pd.DataFrame:
+    """Generate leakage-safe one-step SBA predictions using prior observations only."""
+    result = predictions.copy()
+    result["croston_sba_prediction"] = 0.0
+    histories = {
+        (str(store_id), str(product_id)): group.sort_values("date")
+        for (store_id, product_id), group in clean.groupby(
+            ["store_id", "product_id"], sort=True
+        )
+    }
+    for key, indexes in result.groupby(["store_id", "product_id"], sort=True).groups.items():
+        history = histories[(str(key[0]), str(key[1]))]
+        for index in indexes:
+            forecast_date = result.at[index, "date"]
+            observed = history.loc[history["date"] < forecast_date, "sales"]
+            result.at[index, "croston_sba_prediction"] = croston_sba_forecast(
+                observed.to_numpy(dtype=float)
+            )
+    return result
+
+
 def build_benchmark_report(
     frame: pd.DataFrame, validation_days: int = 28
 ) -> tuple[dict[str, object], pd.DataFrame, pd.DataFrame]:
-    """Evaluate the model and simple baselines on the same chronological holdout."""
+    """Evaluate the model and three baselines on the same chronological holdout."""
     if (
         isinstance(validation_days, bool)
         or not isinstance(validation_days, int)
@@ -42,16 +65,17 @@ def build_benchmark_report(
 
     clean = validate_sales_frame(frame)
     result = evaluate_forecast(clean, validation_days=validation_days)
-    predictions = result.predictions.copy()
+    predictions = _add_croston_predictions(clean, result.predictions.copy())
 
+    columns = {
+        "random_forest": "prediction",
+        "naive_last_day": "naive_prediction",
+        "seasonal_naive_7_day": "seasonal_naive_prediction",
+        "croston_sba": "croston_sba_prediction",
+    }
     metrics = {
-        "random_forest": _metrics(predictions["sales"], predictions["prediction"]),
-        "naive_last_day": _metrics(
-            predictions["sales"], predictions["naive_prediction"]
-        ),
-        "seasonal_naive_7_day": _metrics(
-            predictions["sales"], predictions["seasonal_naive_prediction"]
-        ),
+        name: _metrics(predictions["sales"], predictions[column])
+        for name, column in columns.items()
     }
 
     per_series_rows: list[dict[str, object]] = []
@@ -63,11 +87,7 @@ def build_benchmark_report(
             "product_id": str(product_id),
             "validation_rows": len(group),
         }
-        for name, column in (
-            ("random_forest", "prediction"),
-            ("naive_last_day", "naive_prediction"),
-            ("seasonal_naive_7_day", "seasonal_naive_prediction"),
-        ):
+        for name, column in columns.items():
             for metric, value in _metrics(group["sales"], group[column]).items():
                 row[f"{name}_{metric}"] = value
         per_series_rows.append(row)
@@ -85,7 +105,9 @@ def build_benchmark_report(
         "validation_rows": len(predictions),
         "evaluation_method": (
             "Chronological rolling one-step-ahead holdout; observed sales from "
-            "earlier validation dates are used as lag inputs for later dates."
+            "earlier validation dates are used as lag inputs for later dates. "
+            "Croston SBA is recalculated using observations strictly before each "
+            "forecast date."
         ),
         "metrics": metrics,
         "interpretation_note": (
@@ -103,7 +125,12 @@ def build_benchmark_summary(report: dict[str, object]) -> str:
         raise ValueError("report must contain a non-empty metrics mapping")
 
     metric_names = ("mae", "rmse", "wape")
-    methods = ("random_forest", "naive_last_day", "seasonal_naive_7_day")
+    methods = (
+        "random_forest",
+        "naive_last_day",
+        "seasonal_naive_7_day",
+        "croston_sba",
+    )
     for method in methods:
         if method not in metrics or not isinstance(metrics[method], dict):
             raise ValueError(f"report is missing metrics for {method}")
@@ -116,6 +143,7 @@ def build_benchmark_summary(report: dict[str, object]) -> str:
         "random_forest": "Random Forest",
         "naive_last_day": "Naive (last day)",
         "seasonal_naive_7_day": "Seasonal naive (7-day)",
+        "croston_sba": "Croston SBA",
     }
     lines = [
         "# DemandIQ benchmark insights",
@@ -155,7 +183,7 @@ def build_benchmark_summary(report: dict[str, object]) -> str:
         lines.append(f"- **{metric.upper()}**: {labels[winner]} ({formatted}).")
 
     best_baseline = min(
-        ("naive_last_day", "seasonal_naive_7_day"),
+        ("naive_last_day", "seasonal_naive_7_day", "croston_sba"),
         key=lambda method: metrics[method]["wape"],
     )
     baseline_wape = metrics[best_baseline]["wape"]
