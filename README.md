@@ -11,7 +11,7 @@ DemandIQ is a portfolio-grade retail analytics MVP that turns daily SKU sales in
 - Builds calendar features, 1/7/14/28-day lags, and shifted seven-day rolling statistics.
 - Trains a Random Forest demand model and evaluates it against last-day and seven-day seasonal-naive baselines.
 - Reports MAE, RMSE, and WAPE on a chronological rolling one-step-ahead holdout.
-- Compares Random Forest with last-day, seven-day seasonal-naive, and Croston SBA intermittent-demand baselines.
+- Compares Random Forest with last-day, seven-day seasonal-naive, and Croston SBA intermittent-demand baselines.\n- Classifies each SKU from training history as smooth, erratic, intermittent, lumpy, or no-demand using ADI and CV².
 - Generates recursive multi-day forecasts for each store/SKU.
 - Produces SKU-level replenishment suggestions using lead-time demand, a days-of-demand buffer, recent demand variability, stock cover, and stockout-risk bands.
 - Exports forecast and replenishment tables as CSV.
@@ -140,7 +140,7 @@ python scripts/benchmark.py --input path/to/daily_sales.csv --validation-days 28
 Reports are written to `reports/benchmark/`:
 - `metrics.json`: dataset summary, evaluation method, and overall MAE/RMSE/WAPE for the Random Forest and all benchmark baselines.
 - `predictions.csv`: actual and predicted units for each validation row.
-- `per_series_metrics.csv`: model and all baseline metrics by store/product.
+- `per_series_metrics.csv`: model/baseline metrics plus each SKU's training-history demand-pattern class, average demand interval (ADI), and squared coefficient of variation (CV²).
 - `benchmark_summary.md`: readable interpretation with the best-performing method for each metric and a comparison against the strongest baseline.
 
 The holdout is chronological and rolling one-step-ahead: observed sales from earlier validation dates are used as lag inputs for later dates. This is distinct from the recursive future forecast shown in the dashboard. Lower MAE, RMSE, and WAPE are better. Results apply only to the selected dataset and evaluation design; do not claim the model is superior unless the measured metrics support it.
@@ -191,7 +191,7 @@ DemandIQ/
 │   ├── features.py                # Calendar, lag and rolling features
 │   ├── forecasting.py             # Evaluation and recursive forecasts
 │   ├── inventory.py               # Reorder point and risk calculations
-│   ├── benchmark.py               # Benchmark metrics and insight summaries
+│   ├── benchmark.py               # Benchmark metrics and insight summaries\n│   ├── demand_patterns.py         # ADI/CV² demand-pattern segmentation
 │   └── uci_online_retail.py       # UCI workbook preparation
 ├── scripts/
 │   ├── make_demo_data.py
@@ -203,7 +203,7 @@ DemandIQ/
 └── compose.yaml
 ```
 
-## Model and inventory assumptions
+## Demand pattern segmentation\n\nThe benchmark classifies each store/SKU using only dates before the validation window. Average demand interval (ADI) and the squared coefficient of variation of positive demand sizes (CV²) use conventional cutoffs of 1.32 and 0.49 to label smooth, erratic, intermittent, and lumpy series. A series with no positive training demand is labelled `no_demand`. These descriptive labels support analysis; they do not by themselves select or deploy a forecasting model.\n\n## Model and inventory assumptions
 
 - Model: RandomForestRegressor with 160 trees, minimum leaf size 2, and fixed random seed.
 - Intermittent-demand comparator: Croston SBA with alpha=0.1, recalculated at each validation date using only prior observations. It is not currently the dashboard's default forecast model.
