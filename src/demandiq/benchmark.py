@@ -122,12 +122,12 @@ def build_benchmark_report(
             "forecast date."
         ),
         "metrics": metrics,
-        "demand_pattern_counts": (
-            pd.Series([row["demand_pattern"] for row in per_series_rows])
-            .value_counts()
-            .sort_index()
-            .to_dict()
-        ),
+        "demand_pattern_counts": {
+            str(pattern): int(count)
+            for pattern, count in pd.Series(
+                [row["demand_pattern"] for row in per_series_rows]
+            ).value_counts().sort_index().items()
+        },
         "interpretation_note": (
             "Lower MAE, RMSE, and WAPE are better. Results describe this dataset "
             "and evaluation setup only; they do not guarantee future business performance."
