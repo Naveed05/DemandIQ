@@ -19,6 +19,7 @@ PREDICTION_COLUMNS = [
     "naive_prediction",
     "seasonal_naive_prediction",
     "croston_sba_prediction",
+    "adaptive_prediction",
 ]
 
 
@@ -74,11 +75,6 @@ def build_benchmark_report(
         "seasonal_naive_7_day": "seasonal_naive_prediction",
         "croston_sba": "croston_sba_prediction",
     }
-    metrics = {
-        name: _metrics(predictions["sales"], predictions[column])
-        for name, column in columns.items()
-    }
-
     per_series_rows: list[dict[str, object]] = []
     cutoff = sorted(clean["date"].unique())[-validation_days]
     for (store_id, product_id), group in predictions.groupby(
@@ -91,6 +87,16 @@ def build_benchmark_report(
             "sales",
         ]
         pattern = demand_pattern_metrics(training_history.to_numpy(dtype=float))
+        selected_method = select_method_for_pattern(str(pattern["pattern"]))
+        selected_column = {
+            "random_forest": "prediction",
+            "croston_sba": "croston_sba_prediction",
+            "zero": None,
+        }[selected_method]
+        mask = (predictions["store_id"] == store_id) & (predictions["product_id"] == product_id)
+        predictions.loc[mask, "adaptive_prediction"] = (
+            0.0 if selected_column is None else predictions.loc[mask, selected_column]
+        )
         row: dict[str, object] = {
             "store_id": str(store_id),
             "product_id": str(product_id),
@@ -98,11 +104,18 @@ def build_benchmark_report(
             "demand_pattern": pattern["pattern"],
             "adi": pattern["adi"],
             "cv2": pattern["cv2"],
+            "selected_method": selected_method,
         }
         for name, column in columns.items():
             for metric, value in _metrics(group["sales"], group[column]).items():
                 row[f"{name}_{metric}"] = value
         per_series_rows.append(row)
+
+    columns["adaptive_selection"] = "adaptive_prediction"
+    metrics = {
+        name: _metrics(predictions["sales"], predictions[column])
+        for name, column in columns.items()
+    }
 
     report: dict[str, object] = {
         "dataset_rows": len(clean),
@@ -122,6 +135,12 @@ def build_benchmark_report(
             "forecast date."
         ),
         "metrics": metrics,
+        "selected_method_counts": {
+            str(method): int(count)
+            for method, count in pd.Series(
+                [row["selected_method"] for row in per_series_rows]
+            ).value_counts().sort_index().items()
+        },
         "demand_pattern_counts": {
             str(pattern): int(count)
             for pattern, count in pd.Series(
@@ -148,6 +167,7 @@ def build_benchmark_summary(report: dict[str, object]) -> str:
         "naive_last_day",
         "seasonal_naive_7_day",
         "croston_sba",
+        "adaptive_selection",
     )
     for method in methods:
         if method not in metrics or not isinstance(metrics[method], dict):
@@ -162,6 +182,7 @@ def build_benchmark_summary(report: dict[str, object]) -> str:
         "naive_last_day": "Naive (last day)",
         "seasonal_naive_7_day": "Seasonal naive (7-day)",
         "croston_sba": "Croston SBA",
+        "adaptive_selection": "Adaptive selection",
     }
     lines = [
         "# DemandIQ benchmark insights",
@@ -189,6 +210,19 @@ def build_benchmark_summary(report: dict[str, object]) -> str:
         )
     else:
         lines.append("- No demand-pattern summary available.")
+    lines.extend([
+        "",
+        "## Adaptive method selection",
+        "",
+        "The policy selects a method from demand-pattern statistics calculated on pre-validation history only:",
+        "- Smooth / erratic → Random Forest",
+        "- Intermittent / lumpy → Croston SBA",
+        "- No demand → zero forecast",
+        "",
+    ])
+    selected_counts = report.get("selected_method_counts", {})
+    if isinstance(selected_counts, dict):
+        lines.extend(f"- **{method}**: {count} series" for method, count in sorted(selected_counts.items()))
     lines.extend([
         "",
         "## Overall metrics",
