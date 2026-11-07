@@ -38,6 +38,8 @@ def test_benchmark_compares_model_and_three_baselines():
     assert "random_forest_wape" in per_series.columns
     assert "seasonal_naive_7_day_wape" in per_series.columns
     assert "croston_sba_wape" in per_series.columns
+    assert {"demand_pattern", "adi", "cv2"}.issubset(per_series.columns)
+    assert sum(report["demand_pattern_counts"].values()) == 1
 
 
 def test_croston_predictions_use_only_observations_before_each_date():
