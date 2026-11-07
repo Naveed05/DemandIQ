@@ -9,6 +9,7 @@ from demandiq.data import validate_sales_frame
 from demandiq.demand_patterns import demand_pattern_metrics
 from demandiq.forecasting import evaluate_forecast
 from demandiq.intermittent import croston_sba_forecast
+from demandiq.model_selection import select_method_for_pattern
 
 PREDICTION_COLUMNS = [
     "date",
@@ -109,6 +110,9 @@ def build_benchmark_report(
         for name, column in columns.items():
             for metric, value in _metrics(group["sales"], group[column]).items():
                 row[f"{name}_{metric}"] = value
+        row["adaptive_selection_mae"] = _metrics(
+            group["sales"], predictions.loc[mask, "adaptive_prediction"]
+        )["mae"]
         per_series_rows.append(row)
 
     columns["adaptive_selection"] = "adaptive_prediction"
