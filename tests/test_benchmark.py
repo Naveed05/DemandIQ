@@ -28,16 +28,19 @@ def test_benchmark_compares_model_and_three_baselines():
         "naive_last_day",
         "seasonal_naive_7_day",
         "croston_sba",
+        "adaptive_selection",
     }
     for metric_values in report["metrics"].values():
         assert set(metric_values) == {"mae", "rmse", "wape"}
         assert all(value >= 0 for value in metric_values.values())
     assert len(predictions) == 7
     assert "croston_sba_prediction" in predictions.columns
+    assert "adaptive_prediction" in predictions.columns
     assert len(per_series) == 1
     assert "random_forest_wape" in per_series.columns
     assert "seasonal_naive_7_day_wape" in per_series.columns
     assert "croston_sba_wape" in per_series.columns
+    assert "selected_method" in per_series.columns
     assert {"demand_pattern", "adi", "cv2"}.issubset(per_series.columns)
     assert sum(report["demand_pattern_counts"].values()) == 1
 
@@ -97,3 +100,27 @@ def test_benchmark_summary_rejects_missing_or_invalid_metrics():
     }
     with pytest.raises(ValueError, match="invalid mae"):
         build_benchmark_summary(invalid)
+
+
+def test_adaptive_selector_uses_documented_pattern_policy():
+    from demandiq.model_selection import select_method_for_pattern
+
+    assert select_method_for_pattern("smooth") == "random_forest"
+    assert select_method_for_pattern("erratic") == "random_forest"
+    assert select_method_for_pattern("intermittent") == "croston_sba"
+    assert select_method_for_pattern("lumpy") == "croston_sba"
+    assert select_method_for_pattern("no_demand") == "zero"
+    with pytest.raises(ValueError, match="Unsupported demand pattern"):
+        select_method_for_pattern("unknown")
+
+
+def test_adaptive_predictions_follow_training_pattern():
+    report, predictions, per_series = build_benchmark_report(daily_sales(), validation_days=7)
+    selected = per_series.iloc[0]["selected_method"]
+    assert report["selected_method_counts"][selected] == 1
+    if selected == "croston_sba":
+        assert predictions["adaptive_prediction"].equals(predictions["croston_sba_prediction"])
+    elif selected == "random_forest":
+        assert predictions["adaptive_prediction"].equals(predictions["prediction"])
+    else:
+        assert predictions["adaptive_prediction"].eq(0).all()
