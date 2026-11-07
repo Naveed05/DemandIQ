@@ -6,6 +6,7 @@
 - [x] Input validation and leakage-aware lag/rolling feature engineering
 - [x] Chronological forecast evaluation with MAE, RMSE, WAPE, last-day and seasonal-naive baselines
 - [x] Croston SBA intermittent-demand benchmark with leakage-safe expanding-history predictions and unit tests
+- [x] SKU demand-pattern segmentation (smooth, erratic, intermittent, lumpy, no demand) using training-history ADI and CV²
 - [x] Recursive multi-day forecasting
 - [x] SKU-level reorder point, safety buffer, stock cover, and stockout-risk recommendations
 - [x] Streamlit dashboard with sales/inventory uploads, forecast comparisons, and CSV exports
@@ -28,8 +29,12 @@
 - Add experiment tracking, model artifact versioning, drift detection, and data-quality monitoring.
 - Extend inventory logic for purchase orders in transit, supplier minimum order quantities, pack sizes, expiry, storage capacity, promotions, lost sales, and supplier lead-time uncertainty.
 
+## Demand segmentation milestone
+
+The benchmark now classifies each product using ADI and CV² calculated strictly from pre-validation training history. It exports the pattern label and numeric statistics alongside each product's model metrics, enabling future per-pattern model analysis without leaking holdout information.
+
 ## Real-data benchmark milestone
 
-The UCI Online Retail benchmark has been run on the selected top-100 product slice (35,082 daily rows, 100 series, 28-day chronological holdout). Random Forest achieved the best RMSE, while the seven-day seasonal-naive baseline slightly outperformed it on MAE and WAPE. See `reports/uci_online_retail/benchmark_summary.md` and `metrics.json`. This is a measured historical benchmark, not evidence of production readiness.
+The UCI Online Retail benchmark has been run on the selected top-100 product slice (35,082 daily rows, 100 series, 28-day chronological holdout). Croston SBA achieved the best aggregate MAE, RMSE, and WAPE among the four tested methods in this selected historical slice. See `reports/uci_online_retail/benchmark_summary.md` and `metrics.json`. This is a measured historical benchmark, not evidence of production readiness.
 
 **Scope boundary:** DemandIQ is a complete, single-user, local portfolio MVP and decision-support demonstration. It is not represented as a production-validated retail replenishment platform. Any future extension should be scoped, implemented, tested, and documented before being described as complete.
