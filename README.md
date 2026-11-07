@@ -11,7 +11,8 @@ DemandIQ is a portfolio-grade retail analytics MVP that turns daily SKU sales in
 - Builds calendar features, 1/7/14/28-day lags, and shifted seven-day rolling statistics.
 - Trains a Random Forest demand model and evaluates it against last-day and seven-day seasonal-naive baselines.
 - Reports MAE, RMSE, and WAPE on a chronological rolling one-step-ahead holdout.
-- Compares Random Forest with last-day, seven-day seasonal-naive, and Croston SBA intermittent-demand baselines.\n- Classifies each SKU from training history as smooth, erratic, intermittent, lumpy, or no-demand using ADI and CV².
+- Compares Random Forest with last-day, seven-day seasonal-naive, and Croston SBA intermittent-demand baselines.
+- Classifies each SKU from training history as smooth, erratic, intermittent, lumpy, or no-demand using ADI and CV².
 - Generates recursive multi-day forecasts for each store/SKU.
 - Produces SKU-level replenishment suggestions using lead-time demand, a days-of-demand buffer, recent demand variability, stock cover, and stockout-risk bands.
 - Exports forecast and replenishment tables as CSV.
@@ -191,7 +192,8 @@ DemandIQ/
 │   ├── features.py                # Calendar, lag and rolling features
 │   ├── forecasting.py             # Evaluation and recursive forecasts
 │   ├── inventory.py               # Reorder point and risk calculations
-│   ├── benchmark.py               # Benchmark metrics and insight summaries\n│   ├── demand_patterns.py         # ADI/CV² demand-pattern segmentation
+│   ├── benchmark.py               # Benchmark metrics and insight summaries
+│   ├── demand_patterns.py         # ADI/CV² demand-pattern segmentation
 │   └── uci_online_retail.py       # UCI workbook preparation
 ├── scripts/
 │   ├── make_demo_data.py
@@ -203,7 +205,11 @@ DemandIQ/
 └── compose.yaml
 ```
 
-## Demand pattern segmentation\n\nThe benchmark classifies each store/SKU using only dates before the validation window. Average demand interval (ADI) and the squared coefficient of variation of positive demand sizes (CV²) use conventional cutoffs of 1.32 and 0.49 to label smooth, erratic, intermittent, and lumpy series. A series with no positive training demand is labelled `no_demand`. These descriptive labels support analysis; they do not by themselves select or deploy a forecasting model.\n\n## Model and inventory assumptions
+## Demand pattern segmentation
+
+The benchmark classifies each store/SKU using only dates before the validation window. Average demand interval (ADI) and the squared coefficient of variation of positive demand sizes (CV²) use conventional cutoffs of 1.32 and 0.49 to label smooth, erratic, intermittent, and lumpy series. A series with no positive training demand is labelled `no_demand`. These descriptive labels support analysis; they do not by themselves select or deploy a forecasting model.
+
+## Model and inventory assumptions
 
 - Model: RandomForestRegressor with 160 trees, minimum leaf size 2, and fixed random seed.
 - Intermittent-demand comparator: Croston SBA with alpha=0.1, recalculated at each validation date using only prior observations. It is not currently the dashboard's default forecast model.
