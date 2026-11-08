@@ -61,3 +61,86 @@ def test_validation_normalizes_timestamps_before_duplicate_check():
     })
     with pytest.raises(ValueError, match="Duplicate"):
         validate_sales_frame(frame)
+
+
+
+def test_inventory_validation_normalizes_and_sorts_rows():
+    from demandiq.data import validate_inventory_frame
+
+    frame = pd.DataFrame({
+        "store_id": [" S2 ", "S1"],
+        "product_id": [" P2 ", "P1"],
+        "current_stock": ["12", 4],
+        "supplier_note": ["keep in source", "extra column"],
+    })
+
+    result = validate_inventory_frame(frame)
+
+    assert result[["store_id", "product_id"]].values.tolist() == [
+        ["S1", "P1"],
+        ["S2", "P2"],
+    ]
+    assert result["current_stock"].tolist() == [4, 12]
+    assert list(result.columns) == ["store_id", "product_id", "current_stock"]
+
+
+@pytest.mark.parametrize(
+    "frame, message",
+    [
+        (pd.DataFrame({"store_id": ["S1"]}), "missing columns"),
+        (
+            pd.DataFrame(columns=["store_id", "product_id", "current_stock"]),
+            "at least one row",
+        ),
+        (
+            pd.DataFrame({
+                "store_id": ["S1", "S1"],
+                "product_id": ["P1", "P1"],
+                "current_stock": [4, 5],
+            }),
+            "Duplicate",
+        ),
+        (
+            pd.DataFrame({
+                "store_id": ["S1"],
+                "product_id": ["P1"],
+                "current_stock": [-1],
+            }),
+            "non-negative",
+        ),
+        (
+            pd.DataFrame({
+                "store_id": ["S1"],
+                "product_id": ["P1"],
+                "current_stock": [float("inf")],
+            }),
+            "finite",
+        ),
+        (
+            pd.DataFrame({
+                "store_id": [" "],
+                "product_id": ["P1"],
+                "current_stock": [4],
+            }),
+            "cannot be empty",
+        ),
+    ],
+)
+def test_inventory_validation_rejects_invalid_snapshots(frame, message):
+    from demandiq.data import validate_inventory_frame
+
+    with pytest.raises(ValueError, match=message):
+        validate_inventory_frame(frame)
+
+
+def test_inventory_validation_rejects_non_numeric_stock():
+    from demandiq.data import validate_inventory_frame
+
+    frame = pd.DataFrame({
+        "store_id": ["S1"],
+        "product_id": ["P1"],
+        "current_stock": ["not-a-number"],
+    })
+
+    with pytest.raises((ValueError, TypeError)):
+        validate_inventory_frame(frame)
