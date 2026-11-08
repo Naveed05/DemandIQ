@@ -285,8 +285,8 @@ with tab_method:
            and complete daily calendars for each store/SKU.
         2. **Engineer features:** calendar signals, 1/7/14/28-day lags, and shifted
            seven-day rolling statistics.
-        3. **Evaluate:** fit a Random Forest on earlier dates and compare it with
-           last-day and seven-day seasonal-naive baselines on a chronological holdout.
+        3. **Evaluate:** compare Random Forest, last-day naive, seven-day seasonal naive,
+           Croston SBA, and a transparent adaptive per-SKU policy on a chronological holdout.
         4. **Forecast:** recursively predict future days, feeding each prediction
            into the next day's lag features.
         5. **Plan inventory:** calculate lead-time demand, a configurable safety
