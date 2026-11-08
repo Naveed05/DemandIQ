@@ -22,6 +22,14 @@ from demandiq.forecasting import evaluate_forecast, forecast_demand
 from demandiq.inventory import reorder_recommendation
 from scripts.make_demo_data import generate_demo_sales
 
+
+@st.cache_data(show_spinner=False)
+def cached_benchmark_report(
+    sales_frame: pd.DataFrame, validation_window: int
+) -> tuple[dict[str, object], pd.DataFrame, pd.DataFrame]:
+    """Cache benchmark outputs for unchanged data and validation settings."""
+    return build_benchmark_report(sales_frame, validation_days=validation_window)
+
 st.set_page_config(page_title="DemandIQ | Retail Intelligence", page_icon="📦", layout="wide")
 st.title("📦 DemandIQ")
 st.caption("Retail demand forecasting · Model evaluation · Inventory replenishment")
@@ -245,8 +253,8 @@ with tab_inventory:
 with tab_method:
     st.subheader("Forecast model comparison")
     with st.spinner("Evaluating forecasting strategies..."):
-        benchmark_report, _, per_series_benchmark = build_benchmark_report(
-            sales, validation_days=validation_days
+        benchmark_report, _, per_series_benchmark = cached_benchmark_report(
+            sales, validation_days
         )
     benchmark_metrics = (
         pd.DataFrame(benchmark_report["metrics"])
