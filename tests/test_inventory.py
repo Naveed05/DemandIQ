@@ -68,12 +68,12 @@ def test_zero_lead_time_has_no_variability_buffer():
         average_daily_demand=8,
         lead_time_days=0,
         current_stock=0,
-        safety_stock_days=0,
+        safety_stock_days=2,
         demand_std_dev=4,
         service_level_z=2,
     )
     assert result["lead_time_demand"] == 0
     assert result["variability_buffer"] == 0
-    assert result["reorder_point"] == 0
-    assert result["order_quantity"] == 0
+    assert result["reorder_point"] == 16
+    assert result["order_quantity"] == 16
     assert result["reorder_required"] is True
