@@ -17,6 +17,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from demandiq.data import validate_sales_frame
+from demandiq.benchmark import build_benchmark_report, build_benchmark_summary
 from demandiq.forecasting import evaluate_forecast, forecast_demand
 from demandiq.inventory import reorder_recommendation
 from scripts.make_demo_data import generate_demo_sales
@@ -242,6 +243,33 @@ with tab_inventory:
     )
 
 with tab_method:
+    st.subheader("Forecast model comparison")
+    with st.spinner("Evaluating forecasting strategies..."):
+        benchmark_report, _, per_series_benchmark = build_benchmark_report(
+            sales, validation_days=validation_days
+        )
+    benchmark_metrics = (
+        pd.DataFrame(benchmark_report["metrics"])
+        .rename_axis("method")
+        .reset_index()
+    )
+    st.dataframe(benchmark_metrics, use_container_width=True, hide_index=True)
+    st.caption(
+        "Adaptive selection is determined from pre-validation demand patterns only. "
+        "The holdout is used for evaluation, never for choosing the method."
+    )
+    st.subheader("Per-SKU demand pattern and selected method")
+    st.dataframe(per_series_benchmark, use_container_width=True, hide_index=True)
+    st.download_button(
+        "Download per-SKU benchmark results",
+        data=per_series_benchmark.to_csv(index=False).encode("utf-8"),
+        file_name="demandiq_per_sku_benchmark.csv",
+        mime="text/csv",
+    )
+    with st.expander("Benchmark interpretation"):
+        st.markdown(build_benchmark_summary(benchmark_report))
+
+    st.divider()
     st.subheader("How DemandIQ works")
     st.markdown(
         """
