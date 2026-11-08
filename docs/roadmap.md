@@ -8,6 +8,7 @@
 - [x] Croston SBA intermittent-demand benchmark with leakage-safe expanding-history predictions and unit tests
 - [x] SKU demand-pattern segmentation (smooth, erratic, intermittent, lumpy, no demand) using training-history ADI and CV²
 - [x] Transparent per-SKU adaptive benchmark policy selected from training-history demand patterns
+- [x] Dashboard benchmark comparison with per-SKU selected methods, full adaptive metrics, CSV export, and cached results
 - [x] Recursive multi-day forecasting
 - [x] SKU-level reorder point, safety buffer, stock cover, and stockout-risk recommendations
 - [x] Streamlit dashboard with sales/inventory uploads, forecast comparisons, and CSV exports
@@ -44,3 +45,8 @@ The UCI Online Retail benchmark has been run on the selected top-100 product sli
 ## Adaptive forecasting policy milestone
 
 The benchmark emits an adaptive per-SKU prediction and selected-method label. Smooth/erratic series use Random Forest; intermittent/lumpy series use Croston SBA; no-demand histories use a zero forecast. Selection uses only pre-validation training history and never chooses a method based on final holdout errors. This is a transparent first policy; dashboard recursive forecasts and empirical inner-validation model selection remain future work.
+
+
+## Adaptive benchmark dashboard milestone
+
+The Method & assumptions tab now displays Random Forest, naive, Croston SBA, and adaptive-selection metrics, alongside each SKU's training-history demand pattern and selected method. Per-SKU MAE, RMSE, and WAPE are exported for all methods, including adaptive selection. The dashboard caches benchmark results for unchanged input data and validation settings.
