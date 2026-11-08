@@ -13,6 +13,7 @@ DemandIQ is a portfolio-grade retail analytics MVP that turns daily SKU sales in
 - Reports MAE, RMSE, and WAPE on a chronological rolling one-step-ahead holdout.
 - Compares Random Forest with last-day, seven-day seasonal-naive, and Croston SBA intermittent-demand baselines.
 - Classifies each SKU from training history as smooth, erratic, intermittent, lumpy, or no-demand using ADI and CV².
+- Selects an interpretable per-SKU benchmark method from training-history demand patterns and reports adaptive MAE, RMSE, and WAPE.
 - Applies a transparent adaptive forecast policy per SKU: Random Forest for smooth/erratic demand, Croston SBA for intermittent/lumpy demand, and zero forecast for no-demand history.
 - Generates recursive multi-day forecasts for each store/SKU.
 - Produces SKU-level replenishment suggestions using lead-time demand, a days-of-demand buffer, recent demand variability, stock cover, and stockout-risk bands.
@@ -145,7 +146,7 @@ Reports are written to `reports/benchmark/`:
 - `per_series_metrics.csv`: model/baseline metrics plus each SKU's training-history demand-pattern class, selected forecasting method, average demand interval (ADI), and squared coefficient of variation (CV²).
 - `benchmark_summary.md`: readable interpretation with the best-performing method for each metric and a comparison against the strongest baseline.
 
-The holdout is chronological and rolling one-step-ahead: observed sales from earlier validation dates are used as lag inputs for later dates. This is distinct from the recursive future forecast shown in the dashboard. Lower MAE, RMSE, and WAPE are better. Results apply only to the selected dataset and evaluation design; do not claim the model is superior unless the measured metrics support it.
+The dashboard Method & assumptions tab also displays the full benchmark comparison, per-SKU pattern/method table, and a downloadable per-SKU report. Benchmark results are cached for unchanged sales data and validation settings. The holdout is chronological and rolling one-step-ahead: observed sales from earlier validation dates are used as lag inputs for later dates. This is distinct from the recursive future forecast shown in the dashboard. Lower MAE, RMSE, and WAPE are better. Results apply only to the selected dataset and evaluation design; do not claim the model is superior unless the measured metrics support it.
 
 ## Optional: UCI Online Retail dataset
 
@@ -195,6 +196,7 @@ DemandIQ/
 │   ├── inventory.py               # Reorder point and risk calculations
 │   ├── benchmark.py               # Benchmark metrics and insight summaries
 │   ├── demand_patterns.py         # ADI/CV² demand-pattern segmentation
+│   ├── model_selection.py         # Transparent demand-pattern method policy
 │   └── uci_online_retail.py       # UCI workbook preparation
 ├── scripts/
 │   ├── make_demo_data.py
