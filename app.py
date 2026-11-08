@@ -5,7 +5,6 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 import plotly.express as px
 import streamlit as st
@@ -17,7 +16,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from demandiq.benchmark import build_benchmark_report, build_benchmark_summary
-from demandiq.data import validate_sales_frame
+from demandiq.data import validate_inventory_frame, validate_sales_frame
 from demandiq.forecasting import evaluate_forecast, forecast_demand
 from demandiq.inventory import reorder_recommendation
 from scripts.make_demo_data import generate_demo_sales
@@ -167,27 +166,7 @@ with tab_inventory:
     )
     if inventory_file is not None:
         try:
-            inventory = pd.read_csv(inventory_file)
-            required_inventory = {"store_id", "product_id", "current_stock"}
-            missing = required_inventory.difference(inventory.columns)
-            if missing:
-                raise ValueError(
-                    f"Inventory CSV is missing columns: {', '.join(sorted(missing))}"
-                )
-            inventory = inventory[list(required_inventory)].copy()
-            inventory["store_id"] = inventory["store_id"].astype("string").str.strip()
-            inventory["product_id"] = inventory["product_id"].astype("string").str.strip()
-            inventory["current_stock"] = pd.to_numeric(
-                inventory["current_stock"], errors="raise"
-            )
-            if (
-                inventory[["store_id", "product_id", "current_stock"]].isna().any().any()
-                or (inventory["current_stock"] < 0).any()
-                or not np.isfinite(inventory["current_stock"].to_numpy(dtype=float)).all()
-            ):
-                raise ValueError("Inventory fields must be present, finite, and non-negative.")
-            if inventory.duplicated(["store_id", "product_id"]).any():
-                raise ValueError("Inventory CSV has duplicate store_id/product_id rows.")
+            inventory = validate_inventory_frame(pd.read_csv(inventory_file))
             stock_source = "uploaded inventory CSV"
         except (ValueError, TypeError, pd.errors.ParserError) as exc:
             st.error(f"Invalid inventory file: {exc}")
