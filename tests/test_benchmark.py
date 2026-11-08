@@ -41,6 +41,11 @@ def test_benchmark_compares_model_and_three_baselines():
     assert "seasonal_naive_7_day_wape" in per_series.columns
     assert "croston_sba_wape" in per_series.columns
     assert "selected_method" in per_series.columns
+    assert {
+        "adaptive_selection_mae",
+        "adaptive_selection_rmse",
+        "adaptive_selection_wape",
+    }.issubset(per_series.columns)
     assert {"demand_pattern", "adi", "cv2"}.issubset(per_series.columns)
     assert sum(report["demand_pattern_counts"].values()) == 1
 
@@ -124,3 +129,21 @@ def test_adaptive_predictions_follow_training_pattern():
         assert predictions["adaptive_prediction"].equals(predictions["prediction"])
     else:
         assert predictions["adaptive_prediction"].eq(0).all()
+
+
+def test_no_demand_training_history_selects_zero_forecast():
+    dates = pd.date_range("2025-01-01", periods=70, freq="D")
+    frame = pd.DataFrame({
+        "date": dates,
+        "store_id": ["S1"] * 70,
+        "product_id": ["P_ZERO"] * 70,
+        "sales": [0.0] * 63 + [4.0, 0.0, 6.0, 0.0, 2.0, 0.0, 1.0],
+    })
+
+    report, predictions, per_series = build_benchmark_report(frame, validation_days=7)
+
+    assert per_series.iloc[0]["demand_pattern"] == "no_demand"
+    assert per_series.iloc[0]["selected_method"] == "zero"
+    assert predictions["adaptive_prediction"].eq(0).all()
+    assert report["selected_method_counts"] == {"zero": 1}
+    assert per_series.iloc[0]["adaptive_selection_mae"] >= 0
