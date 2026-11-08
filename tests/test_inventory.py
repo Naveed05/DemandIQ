@@ -46,3 +46,34 @@ def test_days_of_cover_and_medium_risk_are_reported():
 def test_rejects_invalid_inputs(kwargs):
     with pytest.raises(ValueError):
         reorder_recommendation(**kwargs)
+
+
+def test_zero_demand_does_not_trigger_replenishment():
+    result = reorder_recommendation(
+        average_daily_demand=0,
+        lead_time_days=7,
+        current_stock=0,
+        safety_stock_days=3,
+    )
+    assert result["lead_time_demand"] == 0
+    assert result["reorder_point"] == 0
+    assert result["order_quantity"] == 0
+    assert result["days_of_cover"] == -1
+    assert result["stockout_risk"] == "Low"
+    assert result["reorder_required"] is False
+
+
+def test_zero_lead_time_has_no_variability_buffer():
+    result = reorder_recommendation(
+        average_daily_demand=8,
+        lead_time_days=0,
+        current_stock=0,
+        safety_stock_days=2,
+        demand_std_dev=4,
+        service_level_z=2,
+    )
+    assert result["lead_time_demand"] == 0
+    assert result["variability_buffer"] == 0
+    assert result["reorder_point"] == 16
+    assert result["order_quantity"] == 16
+    assert result["reorder_required"] is True

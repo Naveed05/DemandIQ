@@ -39,12 +39,21 @@ def reorder_recommendation(
     reorder_point = lead_time_demand + safety_stock
     order_quantity = max(0, math.ceil(reorder_point - current_stock))
     coverage_days = current_stock / average_daily_demand if average_daily_demand > 0 else math.inf
-    if current_stock <= lead_time_demand:
+    if average_daily_demand == 0:
+        # No observed demand means there is no consumption signal to replenish.
+        # Keep the conventional risk labels for dashboard sorting/compatibility.
+        risk = "Low"
+        order_quantity = 0
+        reorder_required = False
+    elif current_stock <= lead_time_demand:
         risk = "High"
+        reorder_required = current_stock <= reorder_point
     elif current_stock <= reorder_point:
         risk = "Medium"
+        reorder_required = current_stock <= reorder_point
     else:
         risk = "Low"
+        reorder_required = False
     return {
         "lead_time_demand": round(lead_time_demand, 2),
         "safety_stock": round(safety_stock, 2),
@@ -53,5 +62,5 @@ def reorder_recommendation(
         "order_quantity": order_quantity,
         "days_of_cover": round(coverage_days, 2) if math.isfinite(coverage_days) else -1.0,
         "stockout_risk": risk,
-        "reorder_required": current_stock <= reorder_point,
+        "reorder_required": reorder_required,
     }
