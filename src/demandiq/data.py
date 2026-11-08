@@ -60,7 +60,7 @@ def validate_inventory_frame(frame: pd.DataFrame) -> pd.DataFrame:
     if frame.empty:
         raise ValueError("Inventory data must contain at least one row.")
 
-    result = frame[list(INVENTORY_REQUIRED_COLUMNS)].copy()
+    result = frame[["store_id", "product_id", "current_stock"]].copy()
     result["store_id"] = result["store_id"].astype("string").str.strip()
     result["product_id"] = result["product_id"].astype("string").str.strip()
     result["current_stock"] = pd.to_numeric(result["current_stock"], errors="raise")
