@@ -68,6 +68,7 @@ def test_zero_lead_time_has_no_variability_buffer():
         average_daily_demand=8,
         lead_time_days=0,
         current_stock=0,
+        safety_stock_days=0,
         demand_std_dev=4,
         service_level_z=2,
     )
