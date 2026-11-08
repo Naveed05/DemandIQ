@@ -110,9 +110,10 @@ def build_benchmark_report(
         for name, column in columns.items():
             for metric, value in _metrics(group["sales"], group[column]).items():
                 row[f"{name}_{metric}"] = value
-        row["adaptive_selection_mae"] = _metrics(
+        for metric, value in _metrics(
             group["sales"], predictions.loc[mask, "adaptive_prediction"]
-        )["mae"]
+        ).items():
+            row[f"adaptive_selection_{metric}"] = value
         per_series_rows.append(row)
 
     columns["adaptive_selection"] = "adaptive_prediction"
