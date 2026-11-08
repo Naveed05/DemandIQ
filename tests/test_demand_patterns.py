@@ -29,3 +29,18 @@ def test_reports_adi_and_cv_squared():
 def test_rejects_invalid_history(history):
     with pytest.raises(ValueError):
         demand_pattern_metrics(history)
+
+
+def test_cv_squared_threshold_is_classified_as_erratic():
+    result = demand_pattern_metrics([3, 17])
+    assert result["cv2"] == pytest.approx(0.49)
+    assert result["pattern"] == "erratic"
+
+
+def test_positive_scale_does_not_change_demand_pattern():
+    history = [0, 0, 4, 0, 0, 12, 0, 0, 0, 8]
+    original = demand_pattern_metrics(history)
+    scaled = demand_pattern_metrics([value * 100 for value in history])
+    assert scaled["pattern"] == original["pattern"]
+    assert scaled["adi"] == original["adi"]
+    assert scaled["cv2"] == pytest.approx(original["cv2"])
