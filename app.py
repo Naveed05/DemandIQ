@@ -179,6 +179,17 @@ with tab_inventory:
         average_daily_demand=("sales", "mean"),
         demand_std_dev=("sales", lambda values: values.tail(28).std(ddof=0)),
     )
+    if not inventory.empty:
+        known_skus = sku_summary[["store_id", "product_id"]].drop_duplicates()
+        unmatched_inventory = inventory.merge(
+            known_skus, on=["store_id", "product_id"], how="left", indicator=True
+        )
+        unmatched_count = int(unmatched_inventory["_merge"].eq("left_only").sum())
+        if unmatched_count:
+            st.warning(
+                f"{unmatched_count} inventory row(s) do not match a store/SKU in the "
+                "sales data and will not appear in the replenishment plan."
+            )
     sku_summary = sku_summary.merge(
         inventory, on=["store_id", "product_id"], how="left"
     )
