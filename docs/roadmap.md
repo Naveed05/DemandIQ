@@ -7,6 +7,7 @@
 - [x] Chronological forecast evaluation with MAE, RMSE, WAPE, last-day and seasonal-naive baselines
 - [x] Croston SBA intermittent-demand benchmark with leakage-safe expanding-history predictions and unit tests
 - [x] SKU demand-pattern segmentation (smooth, erratic, intermittent, lumpy, no demand) using training-history ADI and CV²
+- [x] Transparent per-SKU adaptive benchmark policy selected from training-history demand patterns
 - [x] Recursive multi-day forecasting
 - [x] SKU-level reorder point, safety buffer, stock cover, and stockout-risk recommendations
 - [x] Streamlit dashboard with sales/inventory uploads, forecast comparisons, and CSV exports
@@ -38,3 +39,8 @@ The benchmark now classifies each product using ADI and CV² calculated strictly
 The UCI Online Retail benchmark has been run on the selected top-100 product slice (35,082 daily rows, 100 series, 28-day chronological holdout). Croston SBA achieved the best aggregate MAE, RMSE, and WAPE among the four tested methods in this selected historical slice. See `reports/uci_online_retail/benchmark_summary.md` and `metrics.json`. This is a measured historical benchmark, not evidence of production readiness.
 
 **Scope boundary:** DemandIQ is a complete, single-user, local portfolio MVP and decision-support demonstration. It is not represented as a production-validated retail replenishment platform. Any future extension should be scoped, implemented, tested, and documented before being described as complete.
+
+
+## Adaptive forecasting policy milestone
+
+The benchmark emits an adaptive per-SKU prediction and selected-method label. Smooth/erratic series use Random Forest; intermittent/lumpy series use Croston SBA; no-demand histories use a zero forecast. Selection uses only pre-validation training history and never chooses a method based on final holdout errors. This is a transparent first policy; dashboard recursive forecasts and empirical inner-validation model selection remain future work.
