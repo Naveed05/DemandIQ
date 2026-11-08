@@ -16,8 +16,8 @@ if str(ROOT / "src") not in sys.path:
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from demandiq.data import validate_sales_frame
 from demandiq.benchmark import build_benchmark_report, build_benchmark_summary
+from demandiq.data import validate_sales_frame
 from demandiq.forecasting import evaluate_forecast, forecast_demand
 from demandiq.inventory import reorder_recommendation
 from scripts.make_demo_data import generate_demo_sales
