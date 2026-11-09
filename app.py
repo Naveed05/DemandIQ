@@ -23,6 +23,23 @@ from scripts.make_demo_data import generate_demo_sales
 
 
 @st.cache_data(show_spinner=False)
+def cached_evaluation(
+    sales_frame: pd.DataFrame, validation_window: int
+) -> tuple[pd.DataFrame, dict[str, float]]:
+    """Cache validation predictions and metrics for unchanged data/settings."""
+    result = evaluate_forecast(sales_frame, validation_days=validation_window)
+    return result.predictions, result.metrics
+
+
+@st.cache_data(show_spinner=False)
+def cached_future_forecast(
+    sales_frame: pd.DataFrame, horizon_window: int
+) -> pd.DataFrame:
+    """Cache adaptive future forecasts for unchanged data and horizon."""
+    return forecast_demand(sales_frame, horizon_days=horizon_window)
+
+
+@st.cache_data(show_spinner=False)
 def cached_benchmark_report(
     sales_frame: pd.DataFrame, validation_window: int
 ) -> tuple[dict[str, object], pd.DataFrame, pd.DataFrame]:
@@ -75,8 +92,10 @@ try:
         sales = generate_demo_sales(days=days)
         data_label = "Synthetic demonstration data"
 
-    evaluation = evaluate_forecast(sales, validation_days=validation_days)
-    future_forecast = forecast_demand(sales, horizon_days=forecast_horizon)
+    evaluation_predictions, evaluation_metrics = cached_evaluation(
+        sales, validation_days
+    )
+    future_forecast = cached_future_forecast(sales, forecast_horizon)
 except (ValueError, TypeError, pd.errors.ParserError) as exc:
     st.error(f"Could not prepare the analysis: {exc}")
     st.stop()
@@ -84,15 +103,15 @@ except (ValueError, TypeError, pd.errors.ParserError) as exc:
 st.caption(f"Data source: **{data_label}** · {sales['store_id'].nunique()} locations · "
            f"{sales['product_id'].nunique()} products · {len(sales):,} daily rows")
 
-model_wape = evaluation.metrics["wape"]
-seasonal_wape = evaluation.metrics["seasonal_naive_wape"]
+model_wape = evaluation_metrics["wape"]
+seasonal_wape = evaluation_metrics["seasonal_naive_wape"]
 improvement = (
     (seasonal_wape - model_wape) / seasonal_wape * 100
     if seasonal_wape > 0 else 0.0
 )
 metric_cols = st.columns(4)
-metric_cols[0].metric("Random Forest MAE", f"{evaluation.metrics['mae']:.2f} units")
-metric_cols[1].metric("Random Forest RMSE", f"{evaluation.metrics['rmse']:.2f} units")
+metric_cols[0].metric("Random Forest MAE", f"{evaluation_metrics['mae']:.2f} units")
+metric_cols[1].metric("Random Forest RMSE", f"{evaluation_metrics['rmse']:.2f} units")
 metric_cols[2].metric("Random Forest WAPE", f"{model_wape:.1%}")
 metric_cols[3].metric(
     "vs 7-day baseline",
@@ -129,7 +148,7 @@ with tab_forecast:
         )
     with validation_col:
         st.subheader("Validation performance")
-        comparison = evaluation.predictions.groupby("date", as_index=False)[
+        comparison = evaluation_predictions.groupby("date", as_index=False)[
             ["sales", "prediction", "seasonal_naive_prediction"]
         ].sum()
         comparison = comparison.rename(
