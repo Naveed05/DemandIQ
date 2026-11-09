@@ -22,7 +22,7 @@ from demandiq.inventory import reorder_recommendation
 from scripts.make_demo_data import generate_demo_sales
 
 
-@st.cache_data(show_spinner=False)
+@st.cache_data(show_spinner=False, max_entries=8)
 def cached_evaluation(
     sales_frame: pd.DataFrame, validation_window: int
 ) -> tuple[pd.DataFrame, dict[str, float]]:
@@ -31,7 +31,7 @@ def cached_evaluation(
     return result.predictions, result.metrics
 
 
-@st.cache_data(show_spinner=False)
+@st.cache_data(show_spinner=False, max_entries=8)
 def cached_future_forecast(
     sales_frame: pd.DataFrame, horizon_window: int
 ) -> pd.DataFrame:
@@ -39,7 +39,7 @@ def cached_future_forecast(
     return forecast_demand(sales_frame, horizon_days=horizon_window)
 
 
-@st.cache_data(show_spinner=False)
+@st.cache_data(show_spinner=False, max_entries=8)
 def cached_benchmark_report(
     sales_frame: pd.DataFrame, validation_window: int
 ) -> tuple[dict[str, object], pd.DataFrame, pd.DataFrame]:
