@@ -11,6 +11,7 @@
 - [x] Dashboard benchmark comparison with per-SKU selected methods, full adaptive metrics, CSV export, and cached results
 - [x] Recursive multi-day forecasting
 - [x] Adaptive future forecasts per SKU using full observed history (Random Forest, Croston SBA, and zero-demand policy)
+- [x] Cache validation, adaptive future forecast, and benchmark computations for unchanged inputs and settings
 - [x] SKU-level reorder point, safety buffer, stock cover, and stockout-risk recommendations
 - [x] Streamlit dashboard with sales/inventory uploads, forecast comparisons, and CSV exports
 - [x] Public UCI Online Retail adapter with provenance, license attribution, and documented transformation assumptions
@@ -52,4 +53,4 @@ The benchmark emits an adaptive per-SKU prediction and selected-method label. Sm
 
 ## Adaptive benchmark dashboard milestone
 
-The Method & assumptions tab now displays Random Forest, naive, Croston SBA, and adaptive-selection metrics, alongside each SKU's training-history demand pattern and selected method. Per-SKU MAE, RMSE, and WAPE are exported for all methods, including adaptive selection. The dashboard caches benchmark results for unchanged input data and validation settings.
+The Method & assumptions tab now displays Random Forest, naive, Croston SBA, and adaptive-selection metrics, alongside each SKU's training-history demand pattern and selected method. Per-SKU MAE, RMSE, and WAPE are exported for all methods, including adaptive selection. The dashboard caches validation predictions, adaptive future forecasts, and benchmark results for unchanged sales data and their respective validation/horizon settings.
