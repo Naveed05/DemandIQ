@@ -46,17 +46,13 @@ jobs:
           }
           trap cleanup EXIT
 
-          docker run --detach \\
-            --name "$container_name" \\
-            --publish 127.0.0.1:8501:8501 \\
-            demandiq:ci
+          docker run --detach --name "$container_name" --publish 127.0.0.1:8501:8501 demandiq:ci
 
           container_user="$(docker inspect --format='{{.Config.User}}' "$container_name")"
           test "$container_user" = "appuser"
 
           for attempt in $(seq 1 45); do
-            if curl --fail --silent --show-error --max-time 2 \\
-              http://127.0.0.1:8501/_stcore/health; then
+            if curl --fail --silent --show-error --max-time 2 http://127.0.0.1:8501/_stcore/health; then
               echo "DemandIQ container passed its HTTP health check."
               exit 0
             fi
