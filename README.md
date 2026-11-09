@@ -15,7 +15,7 @@ DemandIQ is a portfolio-grade retail analytics MVP that turns daily SKU sales in
 - Classifies each SKU from training history as smooth, erratic, intermittent, lumpy, or no-demand using ADI and CV².
 - Selects an interpretable per-SKU benchmark method from training-history demand patterns and reports adaptive MAE, RMSE, and WAPE.
 - Applies a transparent adaptive forecast policy per SKU: Random Forest for smooth/erratic demand, Croston SBA for intermittent/lumpy demand, and zero forecast for no-demand history.
-- Generates recursive multi-day forecasts for each store/SKU.
+- Generates adaptive multi-day forecasts per store/SKU: Random Forest for smooth/erratic demand, Croston SBA for intermittent/lumpy demand, and zero for no-demand histories.
 - Produces SKU-level replenishment suggestions using lead-time demand, a days-of-demand buffer, recent demand variability, stock cover, and stockout-risk bands.
 - Exports forecast and replenishment tables as CSV.
 - Creates a human-readable Markdown benchmark insights report, identifying the best method per metric and comparing Random Forest WAPE with the strongest baseline.
@@ -29,7 +29,7 @@ flowchart TD
     B --> C[Time-aware feature engineering]
     C --> D[Chronological evaluation]
     D --> E[Random Forest + naive baselines]
-    C --> F[Recursive future forecasting]
+    C --> F[Adaptive future forecasting]
     E --> G[Streamlit dashboard]
     F --> G
     H[Inventory CSV / Scenario stock] --> I[Replenishment policy]
@@ -186,7 +186,7 @@ The uploaded UCI workbook was processed for the United Kingdom and evaluated on 
 | Seasonal naive (7-day) | 66.499 | 362.975 | 101.78% |
 | Croston SBA (alpha=0.1) | **58.921** | **264.397** | **90.18%** |
 
-Croston SBA achieved the lowest aggregate MAE, RMSE, and WAPE in this experiment. Its WAPE was 11.40% lower than the best of the original naive baselines. It is a benchmark comparator—not the dashboard's default forecast—and its fixed alpha and results need validation on other datasets and time periods. The chronological rolling holdout uses observed earlier validation actuals for later lag features; this is not a fully recursive 28-day forecast. See [`reports/uci_online_retail/benchmark_summary.md`](reports/uci_online_retail/benchmark_summary.md) and [`metrics.json`](reports/uci_online_retail/metrics.json) for scope, full precision, and caveats.
+Croston SBA achieved the lowest aggregate MAE, RMSE, and WAPE in this experiment. Its WAPE was 11.40% lower than the best of the original naive baselines. It is a benchmark comparator and the adaptive future-forecast method for intermittent/lumpy SKUs; its fixed alpha and results need validation on other datasets and time periods. The chronological rolling holdout uses observed earlier validation actuals for later lag features; this is not a fully recursive 28-day forecast. See [`reports/uci_online_retail/benchmark_summary.md`](reports/uci_online_retail/benchmark_summary.md) and [`metrics.json`](reports/uci_online_retail/metrics.json) for scope, full precision, and caveats.
 
 ## Repository structure
 
@@ -214,15 +214,15 @@ DemandIQ/
 
 ## Demand pattern segmentation
 
-The benchmark classifies each store/SKU using only dates before the validation window. Average demand interval (ADI) and the squared coefficient of variation of positive demand sizes (CV²) use conventional cutoffs of 1.32 and 0.49 to label smooth, erratic, intermittent, and lumpy series. A series with no positive training demand is labelled `no_demand`. The adaptive benchmark policy maps smooth/erratic series to Random Forest, intermittent/lumpy series to Croston SBA, and `no_demand` series to a zero forecast. Selection uses pre-validation training history—not holdout errors—so the final holdout remains an evaluation set. This is a transparent baseline policy, not a claim that these mappings are optimal for every retailer. The dashboard recursive forecast remains Random Forest in this milestone.
+The benchmark classifies each store/SKU using only dates before the validation window. Average demand interval (ADI) and the squared coefficient of variation of positive demand sizes (CV²) use conventional cutoffs of 1.32 and 0.49 to label smooth, erratic, intermittent, and lumpy series. A series with no positive training demand is labelled `no_demand`. The adaptive benchmark policy maps smooth/erratic series to Random Forest, intermittent/lumpy series to Croston SBA, and `no_demand` series to a zero forecast. Selection uses pre-validation training history—not holdout errors—so the final holdout remains an evaluation set. This is a transparent baseline policy, not a claim that these mappings are optimal for every retailer. The dashboard future forecast applies the same policy using each SKU's full observed history: Random Forest forecasts recursively, Croston SBA holds its final estimated rate across the requested horizon, and no-demand histories return zero.
 
 ## Model and inventory assumptions
 
 - Model: RandomForestRegressor with 160 trees, minimum leaf size 2, and fixed random seed.
-- Intermittent-demand comparator: Croston SBA with alpha=0.1, recalculated at each validation date using only prior observations. It is not currently the dashboard's default forecast model.
+- Intermittent-demand method: Croston SBA with alpha=0.1, recalculated at each validation date using only prior observations; for future forecasts, its final rate is held constant across the requested horizon for intermittent/lumpy SKUs.
 - Features: calendar fields, lagged demand, and shifted rolling mean/standard deviation.
 - Evaluation: chronological rolling one-step-ahead holdout; the benchmark compares Random Forest, last-day naive, seven-day seasonal naive, and Croston SBA. The dashboard continues to display the seven-day seasonal-naive baseline.
-- Future forecasts: recursive multi-step predictions; prediction errors can compound across the horizon.
+- Future forecasts: per-SKU adaptive policy selected from full observed history. Random Forest predictions are recursive and errors can compound; Croston SBA holds its final estimated rate constant across the horizon; no-demand histories return zero.
 - Inventory: lead-time demand plus configurable safety days and a demand-variability buffer. The z multiplier is an assumption, not a calibrated service-level guarantee.
 - Not yet modelled: purchase orders already in transit, supplier minimum order quantities, pack sizes, expiry, storage capacity, promotions, lost sales, stockout-censored demand, and supplier-specific lead-time uncertainty.
 
