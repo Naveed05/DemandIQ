@@ -29,7 +29,7 @@ flowchart TD
     B --> C[Time-aware feature engineering]
     C --> D[Chronological evaluation]
     D --> E[Random Forest + naive baselines]
-    C --> F[Recursive future forecasting]
+    C --> F[Adaptive future forecasting]
     E --> G[Streamlit dashboard]
     F --> G
     H[Inventory CSV / Scenario stock] --> I[Replenishment policy]
