@@ -91,9 +91,9 @@ improvement = (
     if seasonal_wape > 0 else 0.0
 )
 metric_cols = st.columns(4)
-metric_cols[0].metric("Model MAE", f"{evaluation.metrics['mae']:.2f} units")
-metric_cols[1].metric("Model RMSE", f"{evaluation.metrics['rmse']:.2f} units")
-metric_cols[2].metric("Model WAPE", f"{model_wape:.1%}")
+metric_cols[0].metric("Random Forest MAE", f"{evaluation.metrics['mae']:.2f} units")
+metric_cols[1].metric("Random Forest RMSE", f"{evaluation.metrics['rmse']:.2f} units")
+metric_cols[2].metric("Random Forest WAPE", f"{model_wape:.1%}")
 metric_cols[3].metric(
     "vs 7-day baseline",
     f"{improvement:+.1f}%",
@@ -109,7 +109,7 @@ else:
     st.info(
         "Validation is a chronological rolling one-step-ahead holdout: actual earlier "
         "validation days are available as lag inputs for later validation days. "
-        "The future horizon below is recursive and uses prior predictions as inputs."
+        "Future forecasts use a per-SKU adaptive policy from full history: Random Forest is recursive for smooth/erratic demand, Croston SBA is used for intermittent/lumpy demand, and no-demand histories receive zero forecasts."
     )
 
 tab_forecast, tab_inventory, tab_method = st.tabs(
@@ -142,14 +142,23 @@ with tab_forecast:
             use_container_width=True,
         )
 
-    st.subheader(f"Future demand · next {forecast_horizon} days")
+    st.subheader(f"Adaptive future demand · next {forecast_horizon} days")
     future_daily = future_forecast.groupby("date", as_index=False)["prediction"].sum()
     future_daily = future_daily.rename(columns={"prediction": "forecast_units"})
     st.plotly_chart(
         px.line(future_daily, x="date", y="forecast_units", markers=True,
-                title="Predicted units across all store/product series"),
+                title="Adaptive forecasts across all store/product series"),
         use_container_width=True,
     )
+    method_mix = (
+        future_forecast[["store_id", "product_id", "forecast_method"]]
+        .drop_duplicates()
+        .groupby("forecast_method", as_index=False)
+        .size()
+        .rename(columns={"size": "sku_count"})
+    )
+    st.caption("Forecast method selected per SKU from its full available history.")
+    st.dataframe(method_mix, use_container_width=True, hide_index=True)
     st.dataframe(future_forecast, use_container_width=True, hide_index=True)
     st.download_button(
         "Download future forecasts",
@@ -253,8 +262,9 @@ with tab_method:
     )
     st.dataframe(benchmark_metrics, use_container_width=True, hide_index=True)
     st.caption(
-        "Adaptive selection is determined from pre-validation demand patterns only. "
-        "The holdout is used for evaluation, never for choosing the method."
+        "Adaptive benchmark selection uses pre-validation demand patterns only; holdout errors "
+        "never choose the method. Future forecasts apply the same policy using each SKU's "
+        "full observed history."
     )
     st.subheader("Per-SKU demand pattern and selected method")
     st.dataframe(per_series_benchmark, use_container_width=True, hide_index=True)
@@ -277,8 +287,9 @@ with tab_method:
            seven-day rolling statistics.
         3. **Evaluate:** compare Random Forest, last-day naive, seven-day seasonal naive,
            Croston SBA, and a transparent adaptive per-SKU policy on a chronological holdout.
-        4. **Forecast:** recursively predict future days, feeding each prediction
-           into the next day's lag features.
+        4. **Forecast:** select a per-SKU method from full history; recursively forecast
+           Random Forest series, apply Croston SBA to intermittent/lumpy series, and
+           keep no-demand series at zero.
         5. **Plan inventory:** calculate lead-time demand, a configurable safety
            buffer, a variability buffer, days of cover, and a suggested order quantity.
         """
