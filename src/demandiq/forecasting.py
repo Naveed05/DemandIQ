@@ -1,4 +1,4 @@
-"""Baseline forecasting, chronological evaluation, and recursive future forecasts."""
+"""Baseline and adaptive forecasting, chronological evaluation, and future forecasts."""
 
 from __future__ import annotations
 
@@ -170,7 +170,9 @@ def forecast_demand(
             forecast_date = last_date + pd.Timedelta(days=step)
             if method == "random_forest":
                 if model is None:
-                    raise RuntimeError("Random Forest strategy was selected without a fitted model.")
+                    raise RuntimeError(
+                        "Random Forest strategy was selected without a fitted model."
+                    )
                 recent_seven = np.asarray(history[-7:], dtype=float)
                 row = {
                     "day_of_week": forecast_date.day_of_week,
