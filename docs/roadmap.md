@@ -10,6 +10,7 @@
 - [x] Transparent per-SKU adaptive benchmark policy selected from training-history demand patterns
 - [x] Dashboard benchmark comparison with per-SKU selected methods, full adaptive metrics, CSV export, and cached results
 - [x] Recursive multi-day forecasting
+- [x] Adaptive future forecasts per SKU using full observed history (Random Forest, Croston SBA, and zero-demand policy)
 - [x] SKU-level reorder point, safety buffer, stock cover, and stockout-risk recommendations
 - [x] Streamlit dashboard with sales/inventory uploads, forecast comparisons, and CSV exports
 - [x] Public UCI Online Retail adapter with provenance, license attribution, and documented transformation assumptions
@@ -46,7 +47,7 @@ The UCI Online Retail benchmark has been run on the selected top-100 product sli
 
 ## Adaptive forecasting policy milestone
 
-The benchmark emits an adaptive per-SKU prediction and selected-method label. Smooth/erratic series use Random Forest; intermittent/lumpy series use Croston SBA; no-demand histories use a zero forecast. Selection uses only pre-validation training history and never chooses a method based on final holdout errors. This is a transparent first policy; dashboard recursive forecasts and empirical inner-validation model selection remain future work.
+The benchmark emits an adaptive per-SKU prediction and selected-method label. Smooth/erratic series use Random Forest; intermittent/lumpy series use Croston SBA; no-demand histories use a zero forecast. Benchmark selection uses only pre-validation training history and never chooses a method based on final holdout errors. The future-forecast path applies the same policy using each SKU's full observed history: Random Forest predictions are recursive, Croston SBA holds its final estimated rate across the requested horizon, and no-demand histories return zero. Empirical inner-validation model selection remains future work.
 
 
 ## Adaptive benchmark dashboard milestone
