@@ -129,7 +129,7 @@ def forecast_demand(
     for (store_id, product_id), group in featured.groupby(group_keys, sort=False):
         if len(group) < 29:
             raise ValueError(
-                "Each store/product series needs at least 29 daily observations; "
+                "Each store/product series needs at least 29 days of observations; "
                 f"store_id={store_id!r}, product_id={product_id!r} has {len(group)}."
             )
         pattern = str(
