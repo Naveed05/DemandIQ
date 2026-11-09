@@ -37,3 +37,38 @@ jobs:
           test -s /tmp/demandiq-smoke-report/benchmark_summary.md
       - name: Build Docker image
         run: docker build --tag demandiq:ci .
+      - name: Smoke test Docker container
+        run: |
+          set -euo pipefail
+          container_name="demandiq-ci-smoke"
+          cleanup() {
+            docker rm --force "$container_name" >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+
+          docker run --detach \\
+            --name "$container_name" \\
+            --publish 127.0.0.1:8501:8501 \\
+            demandiq:ci
+
+          container_user="$(docker inspect --format='{{.Config.User}}' "$container_name")"
+          test "$container_user" = "appuser"
+
+          for attempt in $(seq 1 45); do
+            if curl --fail --silent --show-error --max-time 2 \\
+              http://127.0.0.1:8501/_stcore/health; then
+              echo "DemandIQ container passed its HTTP health check."
+              exit 0
+            fi
+            state="$(docker inspect --format='{{.State.Status}}' "$container_name")"
+            if [ "$state" != "running" ]; then
+              echo "DemandIQ container exited before becoming healthy."
+              docker logs "$container_name"
+              exit 1
+            fi
+            sleep 2
+          done
+
+          echo "DemandIQ did not become healthy within 90 seconds."
+          docker logs "$container_name"
+          exit 1
