@@ -17,9 +17,11 @@
 - [x] Unit tests, linting, and CI on Python 3.11 and 3.12
 - [x] CI end-to-end smoke test that generates demo data and produces JSON, CSV, and Markdown benchmark reports
 - [x] CI Docker image build
+- [x] CI runtime smoke test that starts the container as its non-root user and probes the Streamlit health endpoint
+- [x] Container deployment guide covering startup, health checks, operational boundaries, and hosted-platform handoff
 - [x] Architecture, setup, data schemas, benchmark instructions, assumptions, and limitations documented
 
-**MVP release status: complete.** CI verifies tests, lint, the synthetic-data benchmark workflow, and Docker image construction. The synthetic dataset is for reproducible functional validation only; it is not evidence of real-world forecasting accuracy.
+**MVP release status: complete.** CI verifies tests, lint, the synthetic-data benchmark workflow, Docker image construction, and a running-container HTTP health probe. The synthetic dataset is for reproducible functional validation only; it is not evidence of real-world forecasting accuracy.
 
 ## Optional extensions — outside the MVP release scope
 
