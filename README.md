@@ -86,7 +86,11 @@ GitHub Actions runs these checks on Python 3.11 and 3.12 for pushes and pull req
 docker compose up --build
 ```
 
-Open `http://localhost:8501`. The image uses a non-root application user and includes a Streamlit health check. Stop it with:
+Open `http://localhost:8501`. The image uses a non-root application user and includes a Streamlit health check. GitHub Actions also starts the built container and verifies that the health endpoint responds before CI passes.
+
+See the [container deployment guide](docs/deployment.md) for startup checks, logs, operational boundaries, and the steps needed before exposing the app beyond a trusted network.
+
+Stop it with:
 
 ```bash
 docker compose down
