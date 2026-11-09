@@ -109,7 +109,9 @@ else:
     st.info(
         "Validation is a chronological rolling one-step-ahead holdout: actual earlier "
         "validation days are available as lag inputs for later validation days. "
-        "Future forecasts use a per-SKU adaptive policy from full history: Random Forest is recursive for smooth/erratic demand, Croston SBA is used for intermittent/lumpy demand, and no-demand histories receive zero forecasts."
+        "Future forecasts use a per-SKU adaptive policy from full history: Random Forest is "
+        "recursive for smooth/erratic demand, Croston SBA is used for intermittent/lumpy "
+        "demand, and no-demand histories receive zero forecasts."
     )
 
 tab_forecast, tab_inventory, tab_method = st.tabs(
