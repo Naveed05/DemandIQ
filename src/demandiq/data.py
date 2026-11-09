@@ -39,3 +39,41 @@ def validate_sales_frame(frame: pd.DataFrame) -> pd.DataFrame:
         raise ValueError("Duplicate date/store_id/product_id rows found.")
 
     return result.sort_values(["store_id", "product_id", "date"]).reset_index(drop=True)
+
+
+
+INVENTORY_REQUIRED_COLUMNS = {"store_id", "product_id", "current_stock"}
+
+
+def validate_inventory_frame(frame: pd.DataFrame) -> pd.DataFrame:
+    """Return a normalized inventory snapshot with unique, finite, non-negative stock.
+
+    Extra columns are ignored so supplier exports can contain unrelated metadata.
+    Duplicate store/SKU rows are rejected because silently summing snapshots can
+    double-count stock when the source contains repeated records.
+    """
+    missing = INVENTORY_REQUIRED_COLUMNS.difference(frame.columns)
+    if missing:
+        raise ValueError(
+            f"Inventory data is missing columns: {', '.join(sorted(missing))}"
+        )
+    if frame.empty:
+        raise ValueError("Inventory data must contain at least one row.")
+
+    result = frame[["store_id", "product_id", "current_stock"]].copy()
+    result["store_id"] = result["store_id"].astype("string").str.strip()
+    result["product_id"] = result["product_id"].astype("string").str.strip()
+    result["current_stock"] = pd.to_numeric(result["current_stock"], errors="raise")
+
+    if result.isna().any().any():
+        raise ValueError("Inventory fields cannot contain missing values.")
+    if result["store_id"].eq("").any() or result["product_id"].eq("").any():
+        raise ValueError("Inventory store_id and product_id cannot be empty.")
+    if not np.isfinite(result["current_stock"].to_numpy(dtype=float)).all():
+        raise ValueError("Inventory stock must contain finite numeric values.")
+    if (result["current_stock"] < 0).any():
+        raise ValueError("Inventory stock must be non-negative.")
+    if result.duplicated(["store_id", "product_id"]).any():
+        raise ValueError("Duplicate inventory store_id/product_id rows found.")
+
+    return result.sort_values(["store_id", "product_id"]).reset_index(drop=True)
